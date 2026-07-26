@@ -1,0 +1,2409 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Taskbar Tabs: Firefox Settings (Acorn mockup)</title>
+  <style>
+    /* ============================================================
+   Acorn design tokens (Firefox desktop, in-content surface)
+   Sources: acorn.firefox.com (Semantic color, Typography, Space)
+   ============================================================ */
+    :root {
+      /* Space: in-content scale */
+      --space-xxsmall: 2px;
+      --space-xsmall: 4px;
+      --space-small: 8px;
+      --space-medium: 12px;
+      --space-large: 16px;
+      --space-xlarge: 24px;
+      --space-xxlarge: 32px;
+
+      /* Border */
+      --border-radius-small: 4px;
+      --border-radius-medium: 8px;
+      --border-radius-circle: 9999px;
+      --border-width: 1px;
+
+      /* Size */
+      --button-min-height: 32px;
+      --icon-size: 16px;
+      --icon-size-large: 20px;
+
+      /* Type: in-content base is 15px */
+      --font-family: system-ui, -apple-system, "Segoe UI", "SF Pro Text",
+        Cantarell, "Noto Sans", Ubuntu, sans-serif;
+      --font-size-root: 15px;
+      --font-size-small: 13px;
+      --font-size-xsmall: 11px;
+      --font-size-heading-large: 22px;
+      --font-size-heading-default: 17px;
+      --font-weight-bold: 600;
+
+      /* Accent primary */
+      --color-accent-primary: #0062fa;
+      --color-accent-primary-hover: #0053cb;
+      --color-accent-primary-active: #0041a4;
+
+      /* Feedback */
+      --background-color-success: #e1ffe1;
+      --background-color-information: #e2f7ff;
+      --background-color-critical: #ffe8ea;
+      --background-color-warning: #fff4d0;
+      --icon-color-success: #007700;
+      --icon-color-information: #0053cb;
+      --icon-color-critical: #b20037;
+      --icon-color-warning: #9c5200;
+
+      --text-color-error: #b20037;
+      --outline-color-error: #b20037;
+      --focus-outline-color: var(--color-accent-primary);
+
+      /* Surfaces: light theme */
+      --in-content-page-background: #f9f9fb;
+      --in-content-box-background: #ffffff;
+      --in-content-box-background-hover: #f0f0f4;
+      --in-content-box-background-active: #e0e0e6;
+      --text-color: #15141a;
+      --text-color-deemphasized: #5b5b66;
+      --border-color: #cfcfd8;
+      --border-color-subtle: #e0e0e6;
+      --button-background-color: #f0f0f4;
+      --button-background-color-hover: #e0e0e6;
+      --button-background-color-active: #cfcfd8;
+      --button-background-color-primary: var(--color-accent-primary);
+      --button-text-color-primary: #ffffff;
+      --shadow-popup: 0 2px 14px rgba(58, 57, 68, .2);
+      --shadow-card: none;
+      --chrome-background: #f0f0f4;
+      --chrome-toolbar: #f9f9fb;
+      --selected-row-background: #e2f7ff;
+    }
+
+    :root[data-theme="dark"] {
+      --color-accent-primary: #00cadb;
+      --color-accent-primary-hover: #61dce9;
+      --color-accent-primary-active: #a6ecf4;
+
+      --background-color-success: #003200;
+      --background-color-information: #042356;
+      --background-color-critical: #4c0516;
+      --background-color-warning: #421b00;
+      --icon-color-success: #b5f0b5;
+      --icon-color-information: #abdfff;
+      --icon-color-critical: #ffc3c9;
+      --icon-color-warning: #ffe699;
+
+      --text-color-error: #ffa0aa;
+      --outline-color-error: #ffa0aa;
+
+      --in-content-page-background: #1c1b22;
+      --in-content-box-background: #2b2a33;
+      --in-content-box-background-hover: #52525e;
+      --in-content-box-background-active: #5b5b66;
+      --text-color: #fbfbfe;
+      --text-color-deemphasized: #bfbfc9;
+      --border-color: #8f8f9d;
+      --border-color-subtle: #52525e;
+      --button-background-color: #2b2a33;
+      --button-background-color-hover: #52525e;
+      --button-background-color-active: #5b5b66;
+      --button-text-color-primary: #15141a;
+      --shadow-popup: 0 2px 14px rgba(0, 0, 0, .5);
+      --chrome-background: #1c1b22;
+      --chrome-toolbar: #2b2a33;
+      --selected-row-background: #042356;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    html,
+    body {
+      margin: 0;
+      padding: 0;
+      font-family: var(--font-family);
+      font-size: var(--font-size-root);
+      line-height: 1.5;
+      color: var(--text-color);
+      background: var(--chrome-background);
+    }
+
+    body {
+      padding: var(--space-xlarge);
+      min-height: 100vh;
+    }
+
+    :focus-visible {
+      outline: 2px solid var(--focus-outline-color);
+      outline-offset: 2px;
+      border-radius: var(--border-radius-small);
+    }
+
+    /* ============================================================
+   Mock browser window
+   ============================================================ */
+    .window {
+      max-width: 1200px;
+      margin: 0 auto;
+      border-radius: var(--border-radius-medium);
+      overflow: hidden;
+      border: var(--border-width) solid var(--border-color-subtle);
+      box-shadow: 0 12px 40px rgba(0, 0, 0, .18);
+      background: var(--in-content-page-background);
+    }
+
+    .titlebar {
+      background: var(--chrome-background);
+      display: flex;
+      align-items: flex-end;
+      gap: var(--space-small);
+      padding: var(--space-small) var(--space-small) 0;
+    }
+
+    .window-controls {
+      display: flex;
+      gap: 8px;
+      padding: 0 var(--space-small) 10px;
+    }
+
+    .window-controls i {
+      width: 12px;
+      height: 12px;
+      border-radius: var(--border-radius-circle);
+      display: block;
+      background: var(--border-color);
+    }
+
+    .tab {
+      display: flex;
+      align-items: center;
+      gap: var(--space-small);
+      background: var(--chrome-toolbar);
+      border-radius: var(--border-radius-small) var(--border-radius-small) 0 0;
+      padding: var(--space-small) var(--space-medium);
+      font-size: var(--font-size-small);
+      min-width: 220px;
+    }
+
+    .toolbar {
+      background: var(--chrome-toolbar);
+      border-bottom: var(--border-width) solid var(--border-color-subtle);
+      display: flex;
+      align-items: center;
+      gap: var(--space-small);
+      padding: var(--space-small) var(--space-medium);
+    }
+
+    .urlbar {
+      flex: 1;
+      display: flex;
+      align-items: center;
+      gap: var(--space-small);
+      background: var(--in-content-page-background);
+      border: var(--border-width) solid var(--border-color-subtle);
+      border-radius: var(--border-radius-circle);
+      padding: var(--space-xsmall) var(--space-medium);
+      font-size: var(--font-size-small);
+      color: var(--text-color-deemphasized);
+    }
+
+    /* ============================================================
+   Settings shell
+   ============================================================ */
+    .shell {
+      display: grid;
+      grid-template-columns: 260px minmax(0, 1fr);
+      background: var(--in-content-page-background);
+      min-height: 720px;
+    }
+
+    .nav {
+      padding: var(--space-large) var(--space-medium);
+      border-inline-end: var(--border-width) solid var(--border-color-subtle);
+      min-width: 0;
+    }
+
+    .nav-search {
+      margin-bottom: var(--space-large);
+    }
+
+    .nav ul {
+      list-style: none;
+      margin: 0;
+      padding: 0;
+      display: grid;
+      gap: var(--space-xxsmall);
+    }
+
+    .nav a {
+      display: flex;
+      align-items: center;
+      gap: var(--space-small);
+      padding: var(--space-small) var(--space-medium);
+      border-radius: var(--border-radius-small);
+      color: var(--text-color);
+      text-decoration: none;
+      font-size: var(--font-size-small);
+    }
+
+    .nav a:hover {
+      background: var(--button-background-color-hover);
+    }
+
+    .nav a[aria-current="page"] {
+      background: var(--selected-row-background);
+      color: var(--color-accent-primary);
+      font-weight: var(--font-weight-bold);
+    }
+
+    :root[data-theme="dark"] .nav a[aria-current="page"] {
+      color: var(--color-accent-primary);
+    }
+
+    .main {
+      padding: var(--space-xlarge) var(--space-xxlarge) var(--space-xxlarge);
+      max-width: 820px;
+      min-width: 0;
+    }
+
+    /* ============================================================
+   Typography + primitives
+   ============================================================ */
+    h1 {
+      font-size: var(--font-size-heading-large);
+      font-weight: 400;
+      line-height: 1.4;
+      margin: 0 0 var(--space-xsmall);
+      display: flex;
+      align-items: center;
+      gap: var(--space-small);
+    }
+
+    h2 {
+      font-size: var(--font-size-heading-default);
+      font-weight: var(--font-weight-bold);
+      line-height: 1.4;
+      margin: 0;
+    }
+
+    h3 {
+      font-size: var(--font-size-root);
+      font-weight: var(--font-weight-bold);
+      margin: 0;
+    }
+
+    p {
+      margin: 0;
+    }
+
+    .description {
+      color: var(--text-color-deemphasized);
+      font-size: var(--font-size-small);
+    }
+
+    a.link {
+      color: var(--color-accent-primary);
+      text-decoration: underline;
+    }
+
+    a.link:hover {
+      color: var(--color-accent-primary-hover);
+    }
+
+    .breadcrumbs {
+      display: flex;
+      align-items: center;
+      gap: var(--space-xsmall);
+      font-size: var(--font-size-small);
+      margin-bottom: var(--space-large);
+      color: var(--text-color-deemphasized);
+      flex-wrap: wrap;
+    }
+
+    .breadcrumbs button {
+      background: none;
+      border: 0;
+      padding: var(--space-xxsmall) var(--space-xsmall);
+      color: var(--color-accent-primary);
+      font: inherit;
+      cursor: pointer;
+      border-radius: var(--border-radius-small);
+      text-decoration: underline;
+    }
+
+    .breadcrumbs [aria-current="page"] {
+      color: var(--text-color);
+    }
+
+    /* Card */
+    .card {
+      background: var(--in-content-box-background);
+      border: var(--border-width) solid var(--border-color-subtle);
+      border-radius: var(--border-radius-medium);
+      padding: var(--space-large);
+      margin-block: var(--space-large);
+    }
+
+    .card-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: var(--space-medium);
+      margin-bottom: var(--space-medium);
+      flex-wrap: wrap;
+    }
+
+    /* Button */
+    .button {
+      font: inherit;
+      font-size: var(--font-size-small);
+      font-weight: var(--font-weight-bold);
+      min-height: var(--button-min-height);
+      padding: var(--space-xsmall) var(--space-medium);
+      border-radius: var(--border-radius-small);
+      border: 0;
+      background: var(--button-background-color);
+      color: var(--text-color);
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: var(--space-small);
+      white-space: nowrap;
+    }
+
+    .button:hover {
+      background: var(--button-background-color-hover);
+    }
+
+    .button:active {
+      background: var(--button-background-color-active);
+    }
+
+    .button[disabled] {
+      opacity: .4;
+      cursor: default;
+    }
+
+    .button.primary {
+      background: var(--button-background-color-primary);
+      color: var(--button-text-color-primary);
+    }
+
+    .button.primary:hover {
+      background: var(--color-accent-primary-hover);
+    }
+
+    .button.primary:active {
+      background: var(--color-accent-primary-active);
+    }
+
+    .button.destructive {
+      color: var(--text-color-error);
+    }
+
+    .button.ghost {
+      background: transparent;
+    }
+
+    .button.ghost:hover {
+      background: var(--button-background-color-hover);
+    }
+
+    .button.icon-only {
+      padding: var(--space-xsmall);
+      min-width: var(--button-min-height);
+    }
+
+    /* Inputs */
+    .input,
+    .select {
+      font: inherit;
+      font-size: var(--font-size-small);
+      min-height: var(--button-min-height);
+      padding: var(--space-xsmall) var(--space-small);
+      border-radius: var(--border-radius-small);
+      border: var(--border-width) solid var(--border-color);
+      background: var(--in-content-box-background);
+      color: var(--text-color);
+      width: 100%;
+    }
+
+    .input:focus-visible,
+    .select:focus-visible {
+      border-color: var(--focus-outline-color);
+    }
+
+    .input[aria-invalid="true"] {
+      border-color: var(--outline-color-error);
+    }
+
+    .search-field {
+      position: relative;
+      display: flex;
+      align-items: center;
+    }
+
+    .search-field svg {
+      position: absolute;
+      inset-inline-start: var(--space-small);
+      pointer-events: none;
+      opacity: .7;
+    }
+
+    .search-field .input {
+      padding-inline-start: 30px;
+    }
+
+    .field {
+      display: grid;
+      gap: var(--space-xsmall);
+      margin-bottom: var(--space-large);
+    }
+
+    .field label {
+      font-size: var(--font-size-small);
+      font-weight: var(--font-weight-bold);
+    }
+
+    .field .description {
+      margin-top: calc(var(--space-xxsmall) * -1);
+    }
+
+    /* Checkbox + toggle */
+    .checkbox {
+      display: grid;
+      grid-template-columns: auto 1fr;
+      gap: var(--space-small);
+      align-items: start;
+      padding-block: var(--space-small);
+      cursor: pointer;
+      font-size: var(--font-size-small);
+    }
+
+    .checkbox input {
+      margin: 3px 0 0;
+      accent-color: var(--color-accent-primary);
+      width: 16px;
+      height: 16px;
+    }
+
+    .checkbox.nested {
+      margin-inline-start: var(--space-xlarge);
+    }
+
+    .checkbox[aria-disabled="true"] {
+      opacity: .4;
+      cursor: default;
+    }
+
+    .toggle-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: var(--space-large);
+      padding-block: var(--space-small);
+      flex-wrap: wrap;
+    }
+
+    .toggle-row>div {
+      flex: 1;
+      min-width: 200px;
+    }
+
+    .switch {
+      --w: 40px;
+      --h: 22px;
+      appearance: none;
+      -webkit-appearance: none;
+      width: var(--w);
+      height: var(--h);
+      flex: none;
+      border-radius: var(--border-radius-circle);
+      background: var(--button-background-color-active);
+      position: relative;
+      cursor: pointer;
+      border: 0;
+      transition: background 120ms ease;
+    }
+
+    .switch::after {
+      content: "";
+      position: absolute;
+      top: 3px;
+      inset-inline-start: 3px;
+      width: 16px;
+      height: 16px;
+      border-radius: var(--border-radius-circle);
+      background: var(--in-content-box-background);
+      transition: transform 120ms ease;
+    }
+
+    .switch:disabled {
+      opacity: .4;
+      cursor: default;
+    }
+
+    .switch:checked {
+      background: var(--color-accent-primary);
+    }
+
+    .switch:checked::after {
+      transform: translateX(18px);
+    }
+
+    :root[dir="rtl"] .switch:checked::after {
+      transform: translateX(-18px);
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+
+      .switch,
+      .switch::after {
+        transition: none;
+      }
+    }
+
+    /* Radio group */
+    .radio-group {
+      display: grid;
+      gap: var(--space-xxsmall);
+      border: 0;
+      margin: 0;
+      padding: 0;
+    }
+
+    .radio-group legend {
+      font-size: var(--font-size-small);
+      font-weight: var(--font-weight-bold);
+      padding: 0 0 var(--space-xsmall);
+    }
+
+    .radio {
+      display: grid;
+      grid-template-columns: auto 1fr;
+      gap: var(--space-small);
+      align-items: start;
+      padding-block: var(--space-xsmall);
+      cursor: pointer;
+      font-size: var(--font-size-small);
+    }
+
+    .radio input {
+      margin: 3px 0 0;
+      accent-color: var(--color-accent-primary);
+      width: 16px;
+      height: 16px;
+    }
+
+    /* Message bar */
+    .message-bar {
+      display: flex;
+      align-items: flex-start;
+      gap: var(--space-small);
+      padding: var(--space-medium);
+      border-radius: var(--border-radius-small);
+      font-size: var(--font-size-small);
+      margin-bottom: var(--space-large);
+    }
+
+    .message-bar.information {
+      background: var(--background-color-information);
+    }
+
+    .message-bar.information svg {
+      color: var(--icon-color-information);
+    }
+
+    .message-bar.warning {
+      background: var(--background-color-warning);
+    }
+
+    .message-bar.warning svg {
+      color: var(--icon-color-warning);
+    }
+
+    .message-bar.critical {
+      background: var(--background-color-critical);
+    }
+
+    .message-bar.critical svg {
+      color: var(--icon-color-critical);
+    }
+
+    .message-bar svg {
+      flex: none;
+      margin-top: 2px;
+    }
+
+    .message-bar .grow {
+      flex: 1;
+    }
+
+    /* Badge */
+    .badge {
+      display: inline-flex;
+      align-items: center;
+      gap: var(--space-xxsmall);
+      font-size: var(--font-size-xsmall);
+      font-weight: var(--font-weight-bold);
+      padding: 1px var(--space-small);
+      border-radius: var(--border-radius-circle);
+      background: var(--button-background-color);
+      color: var(--text-color-deemphasized);
+      white-space: nowrap;
+    }
+
+    .badge.accent {
+      background: var(--background-color-information);
+      color: var(--icon-color-information);
+    }
+
+    .badge .dot {
+      width: 8px;
+      height: 8px;
+      border-radius: var(--border-radius-circle);
+      background: currentColor;
+    }
+
+    /* ============================================================
+   Box group / box item: the Taskbar Tabs list
+   ============================================================ */
+    .box-group {
+      border: var(--border-width) solid var(--border-color-subtle);
+      border-radius: var(--border-radius-small);
+    }
+
+    .box-item {
+      display: grid;
+      grid-template-columns: auto auto 1fr auto;
+      align-items: center;
+      gap: var(--space-medium);
+      padding: var(--space-medium);
+      border-bottom: var(--border-width) solid var(--border-color-subtle);
+      background: var(--in-content-box-background);
+    }
+
+    .box-item:first-child {
+      border-start-start-radius: var(--border-radius-small);
+      border-start-end-radius: var(--border-radius-small);
+    }
+
+    .box-item:last-child {
+      border-bottom: 0;
+      border-end-start-radius: var(--border-radius-small);
+      border-end-end-radius: var(--border-radius-small);
+    }
+
+    .box-item:hover {
+      background: var(--in-content-box-background-hover);
+    }
+
+    .box-item.is-selected {
+      background: var(--selected-row-background);
+    }
+
+    .box-item>* {
+      min-width: 0;
+    }
+
+    .app-icon {
+      width: 32px;
+      height: 32px;
+      flex: none;
+      border-radius: var(--border-radius-small);
+      display: grid;
+      place-items: center;
+      color: #fff;
+      font-weight: var(--font-weight-bold);
+      font-size: var(--font-size-small);
+    }
+
+    .app-name-btn {
+      background: none;
+      border: 0;
+      padding: 0;
+      margin: 0;
+      font: inherit;
+      font-weight: var(--font-weight-bold);
+      color: var(--text-color);
+      cursor: pointer;
+      text-align: start;
+      border-radius: var(--border-radius-small);
+      overflow-wrap: anywhere;
+    }
+
+    .app-name-btn:hover {
+      text-decoration: underline;
+    }
+
+    .app-meta {
+      display: flex;
+      align-items: center;
+      gap: var(--space-small);
+      font-size: var(--font-size-small);
+      color: var(--text-color-deemphasized);
+      flex-wrap: wrap;
+      overflow-wrap: anywhere;
+    }
+
+    .app-badges {
+      display: flex;
+      gap: var(--space-xsmall);
+      flex-wrap: wrap;
+      margin-top: var(--space-xxsmall);
+    }
+
+    .row-actions {
+      display: flex;
+      align-items: center;
+      gap: var(--space-xsmall);
+    }
+
+    .list-toolbar {
+      display: flex;
+      align-items: center;
+      gap: var(--space-small);
+      margin-bottom: var(--space-medium);
+      flex-wrap: wrap;
+    }
+
+    .list-toolbar .search-field {
+      flex: 1;
+      min-width: 200px;
+    }
+
+    .bulk-bar {
+      display: flex;
+      align-items: center;
+      gap: var(--space-small);
+      padding: var(--space-small) var(--space-medium);
+      background: var(--selected-row-background);
+      border-radius: var(--border-radius-small);
+      margin-bottom: var(--space-medium);
+      font-size: var(--font-size-small);
+      flex-wrap: wrap;
+    }
+
+    .bulk-bar .grow {
+      flex: 1;
+    }
+
+    .empty-state {
+      text-align: center;
+      padding: var(--space-xxlarge) var(--space-large);
+      display: grid;
+      gap: var(--space-small);
+      justify-items: center;
+    }
+
+    .empty-state .glyph {
+      width: 48px;
+      height: 48px;
+      border-radius: var(--border-radius-medium);
+      border: 2px dashed var(--border-color);
+      display: grid;
+      place-items: center;
+      color: var(--text-color-deemphasized);
+      margin-bottom: var(--space-small);
+    }
+
+    /* Menu */
+    .menu-wrap {
+      position: relative;
+    }
+
+    .menu {
+      position: absolute;
+      inset-inline-end: 0;
+      top: calc(100% + 4px);
+      min-width: 240px;
+      z-index: 40;
+      background: var(--in-content-box-background);
+      border: var(--border-width) solid var(--border-color-subtle);
+      border-radius: var(--border-radius-small);
+      box-shadow: var(--shadow-popup);
+      padding: var(--space-xsmall);
+    }
+
+    .menu[hidden] {
+      display: none;
+    }
+
+    .menu button {
+      display: flex;
+      align-items: center;
+      gap: var(--space-small);
+      width: 100%;
+      text-align: start;
+      background: none;
+      border: 0;
+      font: inherit;
+      font-size: var(--font-size-small);
+      color: var(--text-color);
+      padding: var(--space-small);
+      border-radius: var(--border-radius-small);
+      cursor: pointer;
+    }
+
+    .menu button:hover {
+      background: var(--button-background-color-hover);
+    }
+
+    .menu button.destructive {
+      color: var(--text-color-error);
+    }
+
+    .menu hr {
+      border: 0;
+      border-top: var(--border-width) solid var(--border-color-subtle);
+      margin: var(--space-xsmall) 0;
+    }
+
+    /* Dialog */
+    dialog {
+      border: 0;
+      padding: 0;
+      border-radius: var(--border-radius-medium);
+      background: var(--in-content-box-background);
+      color: var(--text-color);
+      box-shadow: var(--shadow-popup);
+      max-width: 460px;
+      width: calc(100% - 32px);
+    }
+
+    dialog::backdrop {
+      background: rgba(28, 27, 34, .45);
+    }
+
+    .dialog-body {
+      padding: var(--space-large);
+      display: grid;
+      gap: var(--space-medium);
+    }
+
+    .dialog-body h2 {
+      margin-bottom: var(--space-xxsmall);
+    }
+
+    .dialog-actions {
+      display: flex;
+      justify-content: flex-end;
+      gap: var(--space-small);
+      flex-wrap: wrap;
+    }
+
+    /* Toast */
+    .toast-region {
+      position: fixed;
+      inset-block-end: var(--space-xlarge);
+      inset-inline: 0;
+      display: grid;
+      justify-items: center;
+      gap: var(--space-small);
+      pointer-events: none;
+      z-index: 100;
+    }
+
+    .toast {
+      pointer-events: auto;
+      display: flex;
+      align-items: center;
+      gap: var(--space-medium);
+      background: var(--in-content-box-background);
+      border: var(--border-width) solid var(--border-color-subtle);
+      box-shadow: var(--shadow-popup);
+      border-radius: var(--border-radius-small);
+      padding: var(--space-small) var(--space-medium);
+      font-size: var(--font-size-small);
+    }
+
+    /* Detail sub-page */
+    .detail-head {
+      display: flex;
+      align-items: center;
+      gap: var(--space-medium);
+      margin-bottom: var(--space-large);
+      flex-wrap: wrap;
+    }
+
+    .detail-head>div {
+      min-width: 200px;
+    }
+
+    .detail-head .app-icon {
+      width: 48px;
+      height: 48px;
+      font-size: var(--font-size-heading-default);
+    }
+
+    .detail-head h1 {
+      overflow-wrap: anywhere;
+    }
+
+    .perm-row {
+      display: grid;
+      grid-template-columns: 1fr 180px;
+      gap: var(--space-medium);
+      align-items: center;
+      padding-block: var(--space-small);
+      border-bottom: var(--border-width) solid var(--border-color-subtle);
+      font-size: var(--font-size-small);
+    }
+
+    .perm-row:last-child {
+      border-bottom: 0;
+    }
+
+    .storage-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: var(--space-medium);
+      flex-wrap: wrap;
+    }
+
+    /* Box link: Acorn's deep-link affordance to a related settings surface */
+    .box-link {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: var(--space-medium);
+      width: 100%;
+      padding: var(--space-medium);
+      border: var(--border-width) solid var(--border-color-subtle);
+      border-radius: var(--border-radius-small);
+      background: var(--in-content-box-background);
+      color: var(--text-color);
+      font: inherit;
+      font-size: var(--font-size-small);
+      text-align: start;
+      cursor: pointer;
+    }
+
+    .box-link:hover {
+      background: var(--in-content-box-background-hover);
+    }
+
+    .box-link .chev {
+      color: var(--text-color-deemphasized);
+      flex: none;
+    }
+
+    .summary-row {
+      display: flex;
+      align-items: baseline;
+      justify-content: space-between;
+      gap: var(--space-medium);
+      padding-block: var(--space-small);
+      border-bottom: var(--border-width) solid var(--border-color-subtle);
+      font-size: var(--font-size-small);
+      flex-wrap: wrap;
+    }
+
+    .summary-row:last-of-type {
+      border-bottom: 0;
+    }
+
+    .summary-row .value {
+      color: var(--text-color-deemphasized);
+    }
+
+    .form-actions {
+      display: flex;
+      gap: var(--space-small);
+      flex-wrap: wrap;
+      margin-top: var(--space-medium);
+    }
+
+    /* Small Bold: Acorn's documented 13px/150% semibold body token, so the
+   emphasised line matches the description above it. */
+    .emphasis {
+      margin: var(--space-xxsmall) 0 0;
+      font-size: var(--font-size-small);
+      font-weight: var(--font-weight-bold);
+      line-height: 1.5;
+      overflow-wrap: anywhere;
+    }
+
+    /* Tooltip */
+    .tooltip-wrap {
+      position: relative;
+      display: inline-flex;
+    }
+
+    .tooltip {
+      position: absolute;
+      bottom: calc(100% + 6px);
+      inset-inline-start: 50%;
+      transform: translateX(-50%);
+      z-index: 60;
+      width: max-content;
+      max-width: 240px;
+      padding: var(--space-xsmall) var(--space-small);
+      border-radius: var(--border-radius-small);
+      background: var(--text-color);
+      color: var(--in-content-box-background);
+      font-size: var(--font-size-xsmall);
+      line-height: 1.4;
+      box-shadow: var(--shadow-popup);
+      opacity: 0;
+      visibility: hidden;
+      transition: opacity 80ms ease;
+      pointer-events: none;
+    }
+
+    .tooltip::after {
+      content: "";
+      position: absolute;
+      top: 100%;
+      inset-inline-start: 50%;
+      margin-inline-start: -4px;
+      border: 4px solid transparent;
+      border-top-color: var(--text-color);
+    }
+
+    .tooltip-wrap:hover .tooltip,
+    .tooltip-wrap:focus-within .tooltip {
+      opacity: 1;
+      visibility: visible;
+    }
+
+    .tooltip-wrap:has(.button[disabled]):hover .tooltip {
+      opacity: 1;
+      visibility: visible;
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      .tooltip {
+        transition: none;
+      }
+    }
+
+    .divider {
+      border: 0;
+      border-top: var(--border-width) solid var(--border-color-subtle);
+      margin: var(--space-large) 0;
+    }
+
+    /* Mockup theme control (not part of the spec) */
+    .mock-controls {
+      max-width: 1200px;
+      margin: 0 auto var(--space-medium);
+      display: flex;
+      align-items: center;
+      gap: var(--space-small);
+      font-size: var(--font-size-small);
+      color: var(--text-color-deemphasized);
+      flex-wrap: wrap;
+    }
+
+    .mock-controls .grow {
+      flex: 1;
+    }
+
+    .visually-hidden {
+      position: absolute;
+      width: 1px;
+      height: 1px;
+      padding: 0;
+      margin: -1px;
+      overflow: hidden;
+      clip: rect(0 0 0 0);
+      white-space: nowrap;
+      border: 0;
+    }
+
+    /* ============================================================
+   Responsive
+   ============================================================ */
+    @media (max-width: 1000px) {
+      body {
+        padding: var(--space-medium);
+      }
+
+      .main {
+        padding: var(--space-large) var(--space-large) var(--space-xlarge);
+      }
+
+      .shell {
+        grid-template-columns: 220px minmax(0, 1fr);
+      }
+    }
+
+    @media (max-width: 820px) {
+      .shell {
+        grid-template-columns: minmax(0, 1fr);
+        min-height: 0;
+      }
+
+      .nav {
+        border-inline-end: 0;
+        border-bottom: var(--border-width) solid var(--border-color-subtle);
+        padding: var(--space-medium);
+      }
+
+      .nav ul {
+        grid-auto-flow: column;
+        grid-auto-columns: max-content;
+        overflow-x: auto;
+        scrollbar-width: thin;
+        padding-bottom: var(--space-xsmall);
+      }
+
+      .nav a {
+        white-space: nowrap;
+      }
+
+      .main {
+        max-width: none;
+      }
+    }
+
+    @media (max-width: 700px) {
+      body {
+        padding: var(--space-small);
+      }
+
+      .window {
+        border-radius: var(--border-radius-small);
+      }
+
+      .window-controls {
+        display: none;
+      }
+
+      .titlebar {
+        padding-inline: var(--space-xsmall);
+      }
+
+      .tab {
+        min-width: 0;
+        flex: 1;
+      }
+
+      .urlbar {
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+      }
+
+      .main {
+        padding: var(--space-medium);
+      }
+
+      .card {
+        padding: var(--space-medium);
+      }
+
+      /* Row: checkbox + icon + text on line one, actions beneath */
+      .box-item {
+        grid-template-columns: auto auto minmax(0, 1fr);
+        row-gap: var(--space-small);
+      }
+
+      .row-actions {
+        grid-column: 1 / -1;
+        justify-content: flex-start;
+      }
+
+      .row-actions .button {
+        flex: none;
+      }
+
+      .list-toolbar .search-field {
+        min-width: 0;
+        flex: 1 1 100%;
+      }
+
+      .list-toolbar .select {
+        width: 100%;
+      }
+
+      .perm-row {
+        grid-template-columns: minmax(0, 1fr);
+        gap: var(--space-small);
+      }
+
+      .perm-row .select {
+        width: 100%;
+      }
+
+      .storage-row {
+        align-items: flex-start;
+      }
+
+      .storage-row .button {
+        width: 100%;
+      }
+
+      .bulk-bar .button {
+        flex: 1 1 auto;
+      }
+
+      /* Actions sit at the start of the row here, so open the menu rightward
+     instead of leftward off the edge. Still an anchored context menu. */
+      .menu {
+        inset-inline-start: 0;
+        inset-inline-end: auto;
+        min-width: 0;
+        width: max-content;
+        max-width: calc(100vw - 40px);
+      }
+
+      .dialog-actions .button {
+        flex: 1 1 auto;
+      }
+    }
+
+    @media (max-width: 480px) {
+      h1 {
+        font-size: var(--font-size-heading-default);
+      }
+
+      .detail-head .app-icon {
+        width: 40px;
+        height: 40px;
+        font-size: var(--font-size-root);
+      }
+
+      .detail-head .button {
+        width: 100%;
+      }
+
+      .box-item {
+        padding: var(--space-small);
+      }
+
+      .app-badges .badge {
+        font-size: 10px;
+      }
+    }
+  </style>
+</head>
+
+<body>
+
+  <div class="mock-controls">
+    <span>Mockup of a proposed <strong>about:settings</strong> sub-page. Built with Acorn tokens.</span>
+    <span class="grow"></span>
+    <button class="button" id="themeToggle" aria-pressed="false">Switch to dark theme</button>
+  </div>
+
+  <div class="window">
+    <!-- Browser chrome (decorative context only) -->
+    <div class="titlebar">
+      <div class="window-controls" aria-hidden="true"><i></i><i></i><i></i></div>
+      <div class="tab" aria-hidden="true">
+        <svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor">
+          <path
+            d="M8 1.5a6.5 6.5 0 1 0 0 13 6.5 6.5 0 0 0 0-13Zm0 1.5a5 5 0 0 1 5 5 5 5 0 0 1-5 5 5 5 0 0 1-5-5 5 5 0 0 1 5-5Zm0 2a3 3 0 1 0 0 6 3 3 0 0 0 0-6Z" />
+        </svg>
+        Settings
+      </div>
+    </div>
+    <div class="toolbar" aria-hidden="true">
+      <span class="button icon-only ghost">
+        <svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5">
+          <path d="M10 3 5 8l5 5" />
+        </svg>
+      </span>
+      <div class="urlbar">
+        <svg width="14" height="14" viewBox="0 0 16 16" fill="currentColor">
+          <path d="M11 6V5a3 3 0 1 0-6 0v1H4v8h8V6h-1ZM6.5 5a1.5 1.5 0 0 1 3 0v1h-3V5Z" />
+        </svg>
+        about:settings#browsing
+      </div>
+    </div>
+
+    <!-- Settings shell -->
+    <div class="shell">
+      <nav class="nav" aria-label="Settings categories">
+        <div class="nav-search">
+          <label class="visually-hidden" for="settingsSearch">Find in Settings</label>
+          <div class="search-field">
+            <svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6">
+              <circle cx="7" cy="7" r="4.5" />
+              <path d="m10.5 10.5 3 3" />
+            </svg>
+            <input class="input" id="settingsSearch" type="search" placeholder="Find in Settings">
+          </div>
+        </div>
+        <ul>
+          <li><a href="#">My Firefox</a></li>
+          <li><a href="#">Home and Startup</a></li>
+          <li><a href="#">Search</a></li>
+          <li><a href="#">Privacy and Security</a></li>
+          <li><a href="#">Autofill and Passwords</a></li>
+          <li><a href="#">Appearance</a></li>
+          <li><a href="#" aria-current="page">Browsing</a></li>
+          <li><a href="#">Accessibility</a></li>
+          <li><a href="#">Languages</a></li>
+          <li><a href="#">Permissions and data</a></li>
+          <li><a href="#">Firefox Labs</a></li>
+          <li><a href="#">About Firefox</a></li>
+        </ul>
+      </nav>
+
+      <main class="main" id="main">
+        <!-- Rendered by JS -->
+      </main>
+    </div>
+  </div>
+
+  <div class="toast-region" id="toastRegion" role="status" aria-live="polite"></div>
+
+  <!-- ============================ Dialogs ============================ -->
+  <dialog id="addDialog" aria-labelledby="addDialogTitle">
+    <form method="dialog" class="dialog-body" id="addForm">
+      <div>
+        <h2 id="addDialogTitle">Add a Taskbar Tab</h2>
+        <p class="description">Firefox opens this site in its own window, using this profile’s cookies, add-ons and
+          permissions.</p>
+      </div>
+      <div class="field">
+        <label for="addUrl">Address</label>
+        <input class="input" id="addUrl" type="text" placeholder="https://example.com/mail" required spellcheck="false"
+          autocapitalize="off">
+        <p class="description">The app opens at exactly this address. You can change it later.</p>
+        <p class="description" id="addUrlError" hidden style="color: var(--text-color-error)">Enter a web address that
+          starts with https:// or http://</p>
+      </div>
+      <div class="field">
+        <label for="addName">Name</label>
+        <input class="input" id="addName" type="text" placeholder="Example">
+        <p class="description">Shown in the taskbar and in the Start menu.</p>
+      </div>
+      <div class="field">
+        <label for="addContainer">Container</label>
+        <select class="select" id="addContainer">
+          <option value="none">No container</option>
+          <option value="work">Work</option>
+          <option value="personal">Personal</option>
+          <option value="banking">Banking</option>
+          <option value="shopping">Shopping</option>
+        </select>
+      </div>
+      <label class="checkbox"><input type="checkbox" id="addPinned" checked><span>Pin to taskbar</span></label>
+      <div class="dialog-actions">
+        <button class="button" value="cancel" type="button" data-close>Cancel</button>
+        <button class="button primary" id="addConfirm" type="submit">Add Taskbar Tab</button>
+      </div>
+    </form>
+  </dialog>
+
+  <dialog id="saveDialog" aria-labelledby="saveTitle">
+    <form method="dialog" class="dialog-body" id="saveForm">
+      <div>
+        <h2 id="saveTitle">Save changes?</h2>
+        <p class="description" id="saveText"></p>
+        <p class="description" id="saveUrlLabel" hidden></p>
+        <p class="emphasis" id="saveUrl" hidden></p>
+      </div>
+      <div class="message-bar information">
+        <svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor">
+          <path d="M8 1.5a6.5 6.5 0 1 0 0 13 6.5 6.5 0 0 0 0-13ZM7 4.5h2v2H7v-2Zm0 3h2v4H7v-4Z" />
+        </svg>
+        <div class="grow">You may need to pin the app again, since this replaces the shortcut.</div>
+      </div>
+      <div class="dialog-actions">
+        <button class="button" type="button" data-close>Cancel</button>
+        <button class="button primary" type="submit">Save changes</button>
+      </div>
+    </form>
+  </dialog>
+
+  <dialog id="containerDialog" aria-labelledby="containerTitle">
+    <form method="dialog" class="dialog-body" id="containerForm">
+      <div>
+        <h2 id="containerTitle">Change container?</h2>
+        <p class="description" id="containerText"></p>
+      </div>
+      <div class="message-bar information" id="containerPinNote" hidden></div>
+      <div class="dialog-actions">
+        <button class="button" type="button" data-close>Cancel</button>
+        <button class="button primary" type="submit" id="containerConfirm">Change container</button>
+      </div>
+    </form>
+  </dialog>
+
+  <dialog id="removeDialog" aria-labelledby="removeDialogTitle">
+    <form method="dialog" class="dialog-body" id="removeForm">
+      <div>
+        <h2 id="removeDialogTitle">Remove Taskbar Tab?</h2>
+        <p class="description" id="removeDialogText"></p>
+      </div>
+      <div class="message-bar information" id="removeDialogPinNote" hidden></div>
+      <label class="checkbox"><input type="checkbox" id="removeClearData"><span>Also clear cookies and site data for
+          this site</span></label>
+      <div class="dialog-actions">
+        <button class="button" type="button" data-close>Keep it</button>
+        <button class="button primary" type="submit" id="removeConfirm">Remove</button>
+      </div>
+    </form>
+  </dialog>
+
+  <dialog id="clearDataDialog" aria-labelledby="clearDataTitle">
+    <form method="dialog" class="dialog-body" id="clearDataForm">
+      <div>
+        <h2 id="clearDataTitle">Clear cookies and site data?</h2>
+        <p class="description" id="clearDataText"></p>
+      </div>
+      <div class="dialog-actions">
+        <button class="button" type="button" data-close>Cancel</button>
+        <button class="button primary" type="submit">Clear data</button>
+      </div>
+    </form>
+  </dialog>
+
+  <script>
+    /* ============================================================
+       Icons
+       ============================================================ */
+    const I = {
+      search: '<svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6"><circle cx="7" cy="7" r="4.5"/><path d="m10.5 10.5 3 3"/></svg>',
+      more: '<svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor"><circle cx="3" cy="8" r="1.4"/><circle cx="8" cy="8" r="1.4"/><circle cx="13" cy="8" r="1.4"/></svg>',
+      plus: '<svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M8 3.5v9M3.5 8h9"/></svg>',
+      back: '<svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M10 3 5 8l5 5"/></svg>',
+      info: '<svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor"><path d="M8 1.5a6.5 6.5 0 1 0 0 13 6.5 6.5 0 0 0 0-13ZM7 4.5h2v2H7v-2Zm0 3h2v4H7v-4Z"/></svg>',
+      warn: '<svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor"><path d="M8 1.5 15 14H1L8 1.5Zm-1 4.5v4h2V6H7Zm0 5v2h2v-2H7Z"/></svg>',
+      app: '<svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="2" y="2.5" width="12" height="11" rx="2"/><path d="M2 6h12"/></svg>',
+      open: '<svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M9 3h4v4"/><path d="m13 3-6 6"/><path d="M12 9.5V13H3V4h3.5"/></svg>'
+    };
+
+    /* ============================================================
+       State
+       ============================================================ */
+    const CONTAINERS = {
+      none: { label: 'No container', color: null },
+      work: { label: 'Work', color: '#0060df' },
+      personal: { label: 'Personal', color: '#7542e5' },
+      banking: { label: 'Banking', color: '#008787' },
+      shopping: { label: 'Shopping', color: '#c50042' }
+    };
+
+    const PERM_LABELS = { allow: 'Allowed', ask: 'Ask every time', block: 'Blocked' };
+
+    let nextId = 100;
+
+    const state = {
+      showUrlbarButton: true,
+      captureLinksGlobally: true,
+      reopenOnStart: false,
+      query: '',
+      sort: 'name',
+      selection: new Set(),
+      view: 'list',                  // 'list' | 'detail'
+      detailId: null,
+      draft: null,
+      focusField: null,
+      lastRemoved: null,
+      apps: [
+        { id: 1, name: 'Outlook', origin: 'https://outlook.office.com', path: '/mail/', color: '#0f6cbd', letter: 'O', container: 'work', pinned: true, openAtLogin: true, captureLinks: true, notifications: 'allow', camera: 'ask', microphone: 'ask', location: 'block', storage: 184, lastUsed: 'Today at 09:12', added: '12 Mar 2026' },
+        { id: 2, name: 'Teams', origin: 'https://teams.microsoft.com', path: '/v2/', color: '#5b5fc7', letter: 'T', container: 'work', pinned: true, openAtLogin: true, captureLinks: true, notifications: 'allow', camera: 'allow', microphone: 'allow', location: 'block', storage: 402, lastUsed: 'Today at 08:40', added: '12 Mar 2026' },
+        { id: 3, name: 'WhatsApp Web', origin: 'https://web.whatsapp.com', path: '/', color: '#1fa855', letter: 'W', container: 'personal', pinned: true, openAtLogin: false, captureLinks: false, notifications: 'allow', camera: 'ask', microphone: 'allow', location: 'block', storage: 96, lastUsed: 'Yesterday at 21:04', added: '02 Feb 2026' },
+        { id: 4, name: 'Jira', origin: 'https://mozilla.atlassian.net', path: '/jira/software/projects', color: '#2684ff', letter: 'J', container: 'work', pinned: false, openAtLogin: false, captureLinks: true, notifications: 'block', camera: 'block', microphone: 'block', location: 'block', storage: 41, lastUsed: '3 days ago', added: '28 Jan 2026' },
+        { id: 5, name: 'Photopea', origin: 'https://www.photopea.com', path: '/', color: '#1a6fb4', letter: 'P', container: 'none', pinned: true, openAtLogin: false, captureLinks: false, notifications: 'block', camera: 'block', microphone: 'block', location: 'block', storage: 12, lastUsed: '1 week ago', added: '19 Dec 2025' },
+        { id: 6, name: 'Home Assistant', origin: 'http://homeassistant.local:8123', path: '/lovelace/0', color: '#18bcf2', letter: 'H', container: 'personal', pinned: true, openAtLogin: true, captureLinks: false, notifications: 'allow', camera: 'ask', microphone: 'ask', location: 'allow', storage: 8, lastUsed: 'Today at 07:55', added: '05 Nov 2025' }
+      ]
+    };
+
+    /* ============================================================
+       Helpers
+       ============================================================ */
+    const $ = (sel, root = document) => root.querySelector(sel);
+    const main = $('#main');
+
+    function esc(s) {
+      return String(s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+    }
+
+    function appById(id) { return state.apps.find(a => a.id === id); }
+
+    function isExact(app) { return Boolean(app.path) && app.path !== '/'; }
+
+    function displayUrl(app) {
+      return isExact(app) ? app.origin + app.path : app.origin;
+    }
+
+    function hostOf(app) {
+      try { return new URL(app.origin).host; } catch { return app.origin; }
+    }
+
+    function formatStorage(mb) {
+      return mb >= 1024 ? (mb / 1024).toFixed(1) + ' GB' : mb + ' MB';
+    }
+
+    function visibleApps() {
+      const q = state.query.trim().toLowerCase();
+      let list = state.apps.filter(a =>
+        !q || a.name.toLowerCase().includes(q) || a.origin.toLowerCase().includes(q)
+      );
+      const order = { name: (a, b) => a.name.localeCompare(b.name) };
+      if (state.sort === 'name') list.sort(order.name);
+      if (state.sort === 'recent') list.sort((a, b) => state.apps.indexOf(a) - state.apps.indexOf(b));
+      if (state.sort === 'added') list.sort((a, b) => b.id - a.id);
+      if (state.sort === 'size') list.sort((a, b) => b.storage - a.storage);
+      return list;
+    }
+
+    /* ============================================================
+       Toasts
+       ============================================================ */
+    let toastTimer = null;
+    function showToast(message, actionLabel, onAction) {
+      const region = $('#toastRegion');
+      region.innerHTML = '';
+      const el = document.createElement('div');
+      el.className = 'toast';
+      el.innerHTML = `<span>${esc(message)}</span>`;
+      if (actionLabel) {
+        const btn = document.createElement('button');
+        btn.className = 'button ghost';
+        btn.textContent = actionLabel;
+        btn.addEventListener('click', () => { region.innerHTML = ''; onAction && onAction(); });
+        el.appendChild(btn);
+      }
+      const dismiss = document.createElement('button');
+      dismiss.className = 'button icon-only ghost';
+      dismiss.setAttribute('aria-label', 'Dismiss');
+      dismiss.textContent = '×';
+      dismiss.addEventListener('click', () => region.innerHTML = '');
+      el.appendChild(dismiss);
+      region.appendChild(el);
+      clearTimeout(toastTimer);
+      toastTimer = setTimeout(() => { if (region.contains(el)) region.innerHTML = ''; }, 8000);
+    }
+
+    /* ============================================================
+       Render: list view
+       ============================================================ */
+    function render() {
+      const focusKey = document.activeElement && document.activeElement.dataset
+        ? document.activeElement.dataset.fk : null;
+
+      main.innerHTML = state.view === 'detail' ? renderDetail() : renderList();
+      state.view === 'detail' ? wireDetail() : wireList();
+
+      if (focusKey) {
+        const target = main.querySelector(`[data-fk="${CSS.escape(focusKey)}"]`);
+        if (target) target.focus({ preventScroll: true });
+      }
+    }
+
+    function renderList() {
+      const list = visibleApps();
+      const total = state.apps.length;
+      const selCount = state.selection.size;
+      // Firefox hides Restore Defaults until something differs from the defaults,
+      // so the button is never present as a no-op (bug 1434751).
+      const atDefaults = state.showUrlbarButton && state.captureLinksGlobally && !state.reopenOnStart;
+
+      return `
+    <nav class="breadcrumbs" aria-label="Breadcrumb">
+      <button type="button" data-fk="crumb-browsing">Browsing</button>
+      <span aria-hidden="true">›</span>
+      <span aria-current="page">Taskbar Tabs</span>
+    </nav>
+
+    <h1>${I.app} Taskbar Tabs</h1>
+    <p class="description">
+      Run a site in its own window, pinned to your taskbar. Taskbar Tabs use this profile’s cookies,
+      add-ons and permissions, just like a normal tab.
+      <a class="link" href="#">Learn more about Taskbar Tabs</a>
+    </p>
+
+    <section class="card" aria-labelledby="settingsHeading">
+      <div class="card-header">
+        <h2 id="settingsHeading">Settings</h2>
+        <button class="button" data-action="restore-defaults" data-fk="restore-defaults"
+                ${atDefaults ? 'style="visibility: hidden"' : ''}>Restore defaults</button>
+      </div>
+
+      <label class="checkbox">
+        <input type="checkbox" data-pref="showUrlbarButton" data-fk="pref-showUrlbarButton" ${state.showUrlbarButton ? 'checked' : ''}>
+        <span>
+          Show the “Add to taskbar” button in the address bar
+          <p class="description">Turn this off to add Taskbar Tabs from the tab context menu only.</p>
+        </span>
+      </label>
+
+      <label class="checkbox">
+        <input type="checkbox" data-pref="captureLinksGlobally" data-fk="pref-captureLinksGlobally" ${state.captureLinksGlobally ? 'checked' : ''}>
+        <span>
+          Open links in their Taskbar Tab when one exists
+          <p class="description">A link to a site you’ve added opens in that window instead of a new tab. You can change this per app.</p>
+        </span>
+      </label>
+
+      <label class="checkbox">
+        <input type="checkbox" data-pref="reopenOnStart" data-fk="pref-reopenOnStart" ${state.reopenOnStart ? 'checked' : ''}>
+        <span>
+          Reopen Taskbar Tab windows when Firefox restarts
+          <p class="description">Taskbar Tab windows are currently left out of session restore.</p>
+        </span>
+      </label>
+    </section>
+
+    <section class="card" aria-labelledby="installedHeading">
+      <div class="card-header">
+        <h2 id="installedHeading">Installed Taskbar Tabs${total ? ` (${total})` : ''}</h2>
+        <button class="button primary" data-action="add" data-fk="add-app">${I.plus} Add Taskbar Tab…</button>
+      </div>
+
+      ${total === 0 ? emptyStateAll() : `
+        <div class="list-toolbar">
+          <div class="search-field">
+            <label class="visually-hidden" for="appSearch">Search Taskbar Tabs</label>
+            ${I.search}
+            <input class="input" id="appSearch" data-fk="appSearch" type="search"
+                   placeholder="Search Taskbar Tabs" value="${esc(state.query)}">
+          </div>
+          <label class="visually-hidden" for="sortSelect">Sort by</label>
+          <select class="select" id="sortSelect" data-fk="sortSelect" style="width: auto">
+            <option value="name"   ${state.sort === 'name' ? 'selected' : ''}>Name (A to Z)</option>
+            <option value="recent" ${state.sort === 'recent' ? 'selected' : ''}>Recently used</option>
+            <option value="added"  ${state.sort === 'added' ? 'selected' : ''}>Recently added</option>
+            <option value="size"   ${state.sort === 'size' ? 'selected' : ''}>Data stored</option>
+          </select>
+        </div>
+
+        ${selCount ? `
+          <div class="bulk-bar" role="group" aria-label="Actions for selected Taskbar Tabs">
+            <strong>${selCount} selected</strong>
+            <span class="grow"></span>
+            <button class="button destructive" data-action="bulk-remove" data-fk="bulk-remove">Remove</button>
+            <button class="button ghost" data-action="bulk-clear" data-fk="bulk-clear">Cancel</button>
+          </div>` : `
+          <label class="checkbox" style="padding-bottom: var(--space-small)">
+            <input type="checkbox" data-action="select-all" data-fk="select-all">
+            <span>Select all</span>
+          </label>`}
+
+        ${list.length === 0 ? emptyStateSearch() : `
+          <div class="box-group" role="list">
+            ${list.map(renderRow).join('')}
+          </div>`}
+      `}
+    </section>
+  `;
+    }
+
+    function renderRow(app) {
+      const c = CONTAINERS[app.container];
+      const selected = state.selection.has(app.id);
+      return `
+    <div class="box-item ${selected ? 'is-selected' : ''}" role="listitem">
+      <label class="checkbox" style="padding: 0">
+        <input type="checkbox" data-select="${app.id}" data-fk="select-${app.id}" ${selected ? 'checked' : ''}
+               aria-label="Select ${esc(app.name)}">
+        <span></span>
+      </label>
+
+      <span class="app-icon" style="background:${app.color}" aria-hidden="true">${esc(app.letter)}</span>
+
+      <div>
+        <button class="app-name-btn" data-open-detail="${app.id}" data-fk="name-${app.id}">${esc(app.name)}</button>
+        <div class="app-meta">
+          <span>${esc(displayUrl(app))}</span>
+          <span aria-hidden="true">·</span>
+          <span>${esc(app.lastUsed)}</span>
+        </div>
+        <div class="app-badges">
+          ${app.pinned
+          ? '<span class="badge accent">Pinned to taskbar</span>'
+          : '<span class="badge">Not pinned</span>'}
+          ${c.color ? `<span class="badge" style="color:${c.color}"><span class="dot"></span>${esc(c.label)}</span>` : ''}
+          ${app.openAtLogin ? '<span class="badge">Opens at login</span>' : ''}
+          ${isExact(app) ? '<span class="badge">Exact page</span>' : ''}
+        </div>
+      </div>
+
+      <div class="row-actions">
+        <button class="button" data-action="launch" data-id="${app.id}" data-fk="launch-${app.id}">Open</button>
+        <div class="menu-wrap">
+          <button class="button icon-only" data-menu-for="${app.id}" data-fk="menu-${app.id}"
+                  aria-haspopup="menu" aria-expanded="false" aria-label="More options for ${esc(app.name)}">${I.more}</button>
+          <div class="menu" role="menu" hidden data-menu-panel="${app.id}">
+            <button role="menuitem" data-action="launch" data-id="${app.id}">Open</button>
+            <button role="menuitem" data-action="open-tab" data-id="${app.id}">Open in new tab</button>
+            <hr>
+            ${app.pinned ? '' : `<button role="menuitem" data-action="pin-taskbar" data-id="${app.id}">Pin to taskbar</button>`}
+            <button role="menuitem" data-action="rename" data-id="${app.id}">Rename…</button>
+            <button role="menuitem" data-action="copy" data-id="${app.id}">Copy address</button>
+            <button role="menuitem" data-open-detail="${app.id}">App settings…</button>
+            <hr>
+            <button role="menuitem" data-action="clear-data" data-id="${app.id}">Clear cookies and site data…</button>
+            <button role="menuitem" class="destructive" data-action="remove" data-id="${app.id}">Remove Taskbar Tab…</button>
+          </div>
+        </div>
+      </div>
+    </div>`;
+    }
+
+    function emptyStateAll() {
+      return `
+    <div class="empty-state">
+      <span class="glyph" aria-hidden="true">${I.app}</span>
+      <h3>No Taskbar Tabs yet</h3>
+      <p class="description" style="max-width: 46ch">
+        Open a site you use often, then choose <strong>Add to taskbar</strong> in the address bar.
+        It opens in its own window with your add-ons and sign-ins intact.
+      </p>
+      <button class="button primary" data-action="add" data-fk="empty-add">${I.plus} Add Taskbar Tab…</button>
+    </div>`;
+    }
+
+    function emptyStateSearch() {
+      return `
+    <div class="empty-state">
+      <h3>No Taskbar Tabs match “${esc(state.query)}”</h3>
+      <p class="description">Try a different name or address.</p>
+      <button class="button" data-action="clear-search" data-fk="clear-search">Clear search</button>
+    </div>`;
+    }
+
+    /* ============================================================
+       Render: detail sub-page
+       ============================================================ */
+    function renderDetail() {
+      const app = appById(state.detailId);
+      if (!app) { state.view = 'list'; return renderList(); }
+      const c = CONTAINERS[app.container];
+      const draft = state.draft || (state.draft = { name: app.name, url: displayUrl(app) });
+      const dirty = draft.name !== app.name || draft.url !== displayUrl(app);
+
+      const permRow = (label, value, help) => `
+    <div class="summary-row">
+      <div>
+        <strong>${label}</strong>
+        <p class="description">${help}</p>
+      </div>
+      <span class="value">${PERM_LABELS[value]}</span>
+    </div>`;
+
+      return `
+    <nav class="breadcrumbs" aria-label="Breadcrumb">
+      <button type="button" data-action="back">Browsing</button>
+      <span aria-hidden="true">›</span>
+      <button type="button" data-action="back" data-fk="crumb-webapps">Taskbar Tabs</button>
+      <span aria-hidden="true">›</span>
+      <span aria-current="page">${esc(app.name)}</span>
+    </nav>
+
+    <button class="button ghost" data-action="back" data-fk="back-btn" style="margin-bottom: var(--space-medium)">
+      ${I.back} All Taskbar Tabs
+    </button>
+
+    <div class="detail-head">
+      <span class="app-icon" style="background:${app.color}" aria-hidden="true">${esc(app.letter)}</span>
+      <div style="flex: 1">
+        <h1 style="font-size: var(--font-size-heading-large)">${esc(app.name)}</h1>
+        <p class="description">${esc(displayUrl(app))} · Added ${esc(app.added)} · Last opened ${esc(app.lastUsed)}</p>
+      </div>
+      <button class="button primary" data-action="launch" data-id="${app.id}">${I.open} Open</button>
+    </div>
+
+    <section class="card" aria-labelledby="detailIdentity">
+      <h2 id="detailIdentity" style="margin-bottom: var(--space-xsmall)">Name and address</h2>
+      <p class="description" style="margin-bottom: var(--space-medium)">
+        Saving either of these rebuilds this app’s shortcut.
+      </p>
+
+      <div class="field">
+        <label for="detailName">Name</label>
+        <input class="input" id="detailName" type="text" value="${esc(draft.name)}" data-fk="detailName">
+        <p class="description">Shown in the Start menu and Alt+Tab.</p>
+      </div>
+
+      <div class="field">
+        <label for="detailUrl">Address</label>
+        <div style="display: flex; gap: var(--space-small); flex-wrap: wrap; align-items: flex-start">
+          <input class="input" id="detailUrl" type="text" value="${esc(draft.url)}" data-fk="detailUrl"
+                 style="flex: 1 1 240px" spellcheck="false" autocapitalize="off">
+          <span class="tooltip-wrap">
+            <button class="button" type="button" data-action="use-home-page" data-id="${app.id}"
+                    aria-describedby="homePageTip"
+                    ${/^https?:\/\/[^/]+\/?$/.test(draft.url) ? 'disabled' : ''}>Use home page</button>
+            <span class="tooltip" role="tooltip" id="homePageTip">
+              Shortens the address to just ${esc(hostOf(app))}. Keep a full address to give one page its own Taskbar Tab.
+            </span>
+          </span>
+        </div>
+      </div>
+
+      <div class="form-actions">
+        <button class="button primary" data-action="save-identity" data-id="${app.id}" ${dirty ? '' : 'disabled'}>Save changes</button>
+        <button class="button" data-action="revert-identity" ${dirty ? '' : 'disabled'}>Cancel</button>
+      </div>
+    </section>
+
+    <section class="card" aria-labelledby="detailShortcuts">
+      <h2 id="detailShortcuts" style="margin-bottom: var(--space-small)">Startup and links</h2>
+
+      <div class="toggle-row">
+        <div>
+          <label for="detailLogin" style="font-weight: var(--font-weight-bold); font-size: var(--font-size-small)">Open when I sign in</label>
+          <p class="description">Starts this app in the background when you sign in to this device.</p>
+        </div>
+        <input class="switch" type="checkbox" id="detailLogin" role="switch" ${app.openAtLogin ? 'checked' : ''}>
+      </div>
+
+      <div class="toggle-row">
+        <div>
+          <label for="detailCapture" style="font-weight: var(--font-weight-bold); font-size: var(--font-size-small)">Open links to this site here</label>
+          <p class="description">
+            ${state.captureLinksGlobally
+          ? 'Links to ' + esc(hostOf(app)) + ' that you open in Firefox come to this window instead of a new tab.'
+          : 'Turn on “Open links in their Taskbar Tab” in Taskbar Tabs settings to use this.'}
+          </p>
+        </div>
+        <input class="switch" type="checkbox" id="detailCapture" role="switch"
+               ${app.captureLinks ? 'checked' : ''} ${state.captureLinksGlobally ? '' : 'disabled'}>
+      </div>
+    </section>
+
+    <section class="card" aria-labelledby="detailContainerHeading">
+      <h2 id="detailContainerHeading" style="margin-bottom: var(--space-medium)">Container</h2>
+      <div class="field" style="margin-bottom: 0">
+        <label for="detailContainer">Run this app in</label>
+        <select class="select" id="detailContainer">
+          ${Object.entries(CONTAINERS).map(([k, v]) =>
+            `<option value="${k}" ${app.container === k ? 'selected' : ''}>${esc(v.label)}</option>`).join('')}
+        </select>
+        <p class="description">
+          The container decides which cookies and sign-ins ${esc(hostOf(app))} uses here.
+          Changing it signs you out of the app.
+        </p>
+      </div>
+    </section>
+
+    <section class="card" aria-labelledby="detailPerms">
+      <h2 id="detailPerms" style="margin-bottom: var(--space-xsmall)">Site permissions</h2>
+      <p class="description" style="margin-bottom: var(--space-medium)">
+        Firefox grants permissions to a site, not to a Taskbar Tab. These apply to ${esc(hostOf(app))}
+        everywhere in this profile, including ordinary tabs.
+      </p>
+      ${permRow('Notifications', app.notifications, 'Alerts shown by your system.')}
+      ${permRow('Camera', app.camera, 'For calls and photo capture.')}
+      ${permRow('Microphone', app.microphone, 'For calls and voice messages.')}
+      ${permRow('Location', app.location, 'Your approximate position.')}
+      <div style="margin-top: var(--space-medium)">
+        <button class="box-link" data-action="site-permissions" data-id="${app.id}">
+          <span>Change permissions for ${esc(hostOf(app))}</span>
+          <span class="chev" aria-hidden="true">›</span>
+        </button>
+      </div>
+    </section>
+
+    <section class="card" aria-labelledby="detailData">
+      <h2 id="detailData" style="margin-bottom: var(--space-medium)">Data and removal</h2>
+      <div class="storage-row">
+        <div>
+          <strong style="font-size: var(--font-size-small)">Cookies and site data</strong>
+          <p class="description">
+            ${formatStorage(app.storage)} stored for ${esc(hostOf(app))}${c.color ? ' in the ' + esc(c.label.toLowerCase()) + ' container' : ''}.
+            Tabs using the same ${c.color ? 'container' : 'site'} share this data.
+          </p>
+        </div>
+        <button class="button" data-action="clear-data" data-id="${app.id}">Clear data…</button>
+      </div>
+      <hr class="divider">
+      <div class="storage-row">
+        <div>
+          <strong style="font-size: var(--font-size-small)">Remove this Taskbar Tab</strong>
+          <p class="description">Deletes the shortcut Firefox created. ${esc(hostOf(app))} stays available as a normal tab.</p>
+        </div>
+        <button class="button destructive" data-action="remove" data-id="${app.id}">Remove Taskbar Tab…</button>
+      </div>
+    </section>
+  `;
+    }
+
+    /* ============================================================
+       Wiring: list
+       ============================================================ */
+    function closeAllMenus() {
+      document.querySelectorAll('[data-menu-panel]').forEach(p => p.hidden = true);
+      document.querySelectorAll('[data-menu-for]').forEach(b => b.setAttribute('aria-expanded', 'false'));
+    }
+
+    function wireList() {
+      main.querySelectorAll('[data-pref]').forEach(el => {
+        el.addEventListener('change', e => {
+          state[el.dataset.pref] = e.target.checked;
+          render();
+        });
+      });
+
+      const search = $('#appSearch', main);
+      if (search) search.addEventListener('input', e => {
+        state.query = e.target.value;
+        state.selection.clear();
+        render();
+      });
+
+      const sortSelect = $('#sortSelect', main);
+      if (sortSelect) sortSelect.addEventListener('change', e => { state.sort = e.target.value; render(); });
+
+      main.querySelectorAll('[data-select]').forEach(el => {
+        el.addEventListener('change', e => {
+          const id = Number(el.dataset.select);
+          e.target.checked ? state.selection.add(id) : state.selection.delete(id);
+          render();
+        });
+      });
+
+      main.querySelectorAll('[data-menu-for]').forEach(btn => {
+        btn.addEventListener('click', e => {
+          e.stopPropagation();
+          const panel = main.querySelector(`[data-menu-panel="${btn.dataset.menuFor}"]`);
+          const wasOpen = !panel.hidden;
+          closeAllMenus();
+          panel.hidden = wasOpen;
+          btn.setAttribute('aria-expanded', String(!wasOpen));
+          if (!wasOpen) { const first = panel.querySelector('button'); first && first.focus(); }
+        });
+      });
+
+      main.querySelectorAll('[data-open-detail]').forEach(el => {
+        el.addEventListener('click', () => {
+          state.detailId = Number(el.dataset.openDetail);
+          state.view = 'detail';
+          state.draft = null;
+          closeAllMenus();
+          render();
+          window.scrollTo({ top: 0, behavior: 'smooth' });
+        });
+      });
+
+      main.querySelectorAll('[data-action]').forEach(el => {
+        el.addEventListener('click', () => handleAction(el.dataset.action, el.dataset.id ? Number(el.dataset.id) : null));
+      });
+    }
+
+    /* ============================================================
+       Wiring: detail
+       ============================================================ */
+    function wireDetail() {
+      const app = appById(state.detailId);
+      if (!app) return;
+
+      const syncDirty = () => {
+        const dirty = state.draft.name !== app.name || state.draft.url !== displayUrl(app);
+        const save = main.querySelector('[data-action="save-identity"]');
+        const cancel = main.querySelector('[data-action="revert-identity"]');
+        if (save) save.disabled = !dirty;
+        if (cancel) cancel.disabled = !dirty;
+      };
+
+      const nameField = $('#detailName', main);
+      nameField.addEventListener('input', e => {
+        state.draft.name = e.target.value;
+        e.target.removeAttribute('aria-invalid');
+        syncDirty();
+      });
+
+      if (state.focusField === 'name') {
+        state.focusField = null;
+        nameField.focus();
+        nameField.select();
+      }
+
+      $('#detailUrl', main).addEventListener('input', e => {
+        state.draft.url = e.target.value;
+        e.target.removeAttribute('aria-invalid');
+        syncDirty();
+      });
+
+      $('#detailLogin', main).addEventListener('change', e => {
+        app.openAtLogin = e.target.checked;
+        showToast(app.openAtLogin
+          ? `${app.name} will open when you sign in`
+          : `${app.name} will no longer open when you sign in`);
+      });
+
+      const capture = $('#detailCapture', main);
+      if (capture) capture.addEventListener('change', e => { app.captureLinks = e.target.checked; });
+
+      $('#detailContainer', main).addEventListener('change', e => {
+        openContainerDialog(app, e.target.value);
+      });
+
+      main.querySelectorAll('[data-action]').forEach(el => {
+        el.addEventListener('click', () => handleAction(el.dataset.action, el.dataset.id ? Number(el.dataset.id) : null));
+      });
+    }
+
+    /* ============================================================
+       Actions
+       ============================================================ */
+    let pendingRemoveIds = [];
+    let pendingClearId = null;
+
+    function handleAction(action, id) {
+      const app = id != null ? appById(id) : null;
+      closeAllMenus();
+
+      switch (action) {
+        case 'back':
+          state.view = 'list';
+          state.detailId = null;
+          state.draft = null;
+          render();
+          break;
+
+        case 'restore-defaults':
+          state.showUrlbarButton = true;
+          state.captureLinksGlobally = true;
+          state.reopenOnStart = false;
+          render();
+          showToast('Taskbar Tab settings restored to defaults');
+          break;
+
+        case 'use-home-page': {
+          try {
+            const parsed = new URL(/^https?:\/\//i.test(state.draft.url) ? state.draft.url : 'https://' + state.draft.url);
+            state.draft.url = parsed.origin;
+          } catch {
+            state.draft.url = app.origin;
+          }
+          render();
+          break;
+        }
+
+        case 'save-identity': {
+          const raw = state.draft.url.trim();
+          let parsed;
+          try {
+            parsed = new URL(/^https?:\/\//i.test(raw) ? raw : 'https://' + raw);
+            if (!/^https?:$/.test(parsed.protocol)) throw new Error('scheme');
+          } catch {
+            const field = $('#detailUrl', main);
+            if (field) { field.setAttribute('aria-invalid', 'true'); field.focus(); }
+            showToast('That address isn’t valid. Use a full address like https://example.com/mail');
+            return;
+          }
+          const name = state.draft.name.trim();
+          if (!name) {
+            const field = $('#detailName', main);
+            if (field) { field.setAttribute('aria-invalid', 'true'); field.focus(); }
+            showToast('Give the app a name so you can find it in the Start menu');
+            return;
+          }
+
+          const nameChanged = name !== app.name;
+          const urlChanged = parsed.origin + (parsed.pathname + parsed.search) !== app.origin + app.path;
+
+          if (!app.pinned) { applyIdentity(app, name, parsed); break; }
+
+          pendingSave = { appId: app.id, name, parsed };
+
+          const saveText = $('#saveText');
+          saveText.textContent = nameChanged ? `${app.name} will be renamed to ${name}.` : '';
+          saveText.hidden = !nameChanged;
+
+          $('#saveUrlLabel').hidden = !urlChanged;
+          $('#saveUrl').hidden = !urlChanged;
+          if (urlChanged) {
+            $('#saveUrlLabel').textContent = `${name} will open the following URL:`;
+            $('#saveUrl').textContent = parsed.href;
+          }
+
+          $('#saveDialog').showModal();
+          break;
+        }
+
+        case 'revert-identity':
+          state.draft = null;
+          render();
+          break;
+
+        case 'pin-taskbar':
+          app.pinned = true;
+          render();
+          showToast(`${app.name} added to your taskbar`);
+          break;
+
+        case 'site-permissions':
+          showToast(`Opening permissions for ${hostOf(app)}`);
+          break;
+
+
+        case 'select-all': {
+          const all = visibleApps();
+          const allSelected = all.every(a => state.selection.has(a.id));
+          allSelected ? state.selection.clear() : all.forEach(a => state.selection.add(a.id));
+          render();
+          break;
+        }
+
+        case 'bulk-clear':
+          state.selection.clear();
+          render();
+          break;
+
+        case 'bulk-remove':
+          pendingRemoveIds = [...state.selection];
+          openRemoveDialog(pendingRemoveIds);
+          break;
+
+        case 'clear-search':
+          state.query = '';
+          render();
+          break;
+
+        case 'add':
+          $('#addUrl').value = '';
+          $('#addName').value = '';
+          $('#addContainer').value = 'none';
+          $('#addPinned').checked = true;
+          $('#addUrlError').hidden = true;
+          $('#addDialog').showModal();
+          break;
+
+        case 'launch':
+          showToast(`${app.name} opened in its own window`);
+          break;
+
+        case 'open-tab':
+          showToast(`${app.name} opened in a Firefox tab`);
+          break;
+
+        case 'rename':
+          state.detailId = id;
+          state.view = 'detail';
+          state.draft = null;
+          state.focusField = 'name';
+          render();
+          break;
+
+        case 'copy':
+          showToast(`Address copied: ${displayUrl(app)}`);
+          break;
+
+        case 'clear-data':
+          pendingClearId = id;
+          $('#clearDataText').textContent =
+            `${formatStorage(app.storage)} of cookies and site data for ${hostOf(app)} will be deleted. This also affects tabs using the same container, and you’ll be signed out of ${app.name}.`;
+          $('#clearDataDialog').showModal();
+          break;
+
+        case 'remove':
+          pendingRemoveIds = [id];
+          openRemoveDialog(pendingRemoveIds);
+          break;
+      }
+    }
+
+    let pendingContainer = null;
+    let pendingSave = null;
+
+    function applyIdentity(app, name, parsed) {
+      app.name = name;
+      app.letter = name.charAt(0).toUpperCase();
+      app.origin = parsed.origin;
+      app.path = parsed.pathname + parsed.search;
+      state.draft = null;
+      render();
+      showToast(`Changes saved for ${app.name}`);
+    }
+
+    document.getElementById('saveForm').addEventListener('submit', () => {
+      const change = pendingSave;
+      pendingSave = null;
+      if (!change) return;
+      const app = appById(change.appId);
+      if (app) applyIdentity(app, change.name, change.parsed);
+    });
+
+    function openContainerDialog(app, to) {
+      const from = app.container;
+      if (to === from) return;
+      pendingContainer = { appId: app.id, from, to };
+
+      const toLabel = CONTAINERS[to].label;
+      const cookiesPhrase = to === 'none'
+        ? 'the default cookies and sign-ins'
+        : `the ${toLabel.toLowerCase()} container’s cookies and sign-ins`;
+
+      $('#containerTitle').textContent = to === 'none'
+        ? `Stop using a container for ${app.name}?`
+        : `Move ${app.name} to ${toLabel}?`;
+
+      $('#containerText').textContent =
+        `${app.name} will use ${cookiesPhrase} for ${hostOf(app)}, so you may be signed out of the app.`;
+
+      const note = $('#containerPinNote');
+      note.hidden = !app.pinned;
+      note.innerHTML = I.info +
+        '<div class="grow">You may need to pin the app again, since this replaces the shortcut.</div>';
+
+      $('#containerConfirm').textContent = to === 'none' ? 'Remove container' : `Move to ${toLabel}`;
+      $('#containerDialog').showModal();
+    }
+
+    $('#containerForm').addEventListener('submit', () => {
+      const change = pendingContainer;
+      pendingContainer = null;
+      if (!change) return;
+      const app = appById(change.appId);
+      if (!app) return;
+
+      const previousStorage = app.storage;
+      app.container = change.to;
+      app.storage = 0;
+      render();
+
+      showToast(`${app.name} now runs in ${CONTAINERS[change.to].label.toLowerCase()}`, 'Undo', () => {
+        app.container = change.from;
+        app.storage = previousStorage;
+        render();
+      });
+    });
+
+    $('#containerDialog').addEventListener('close', () => {
+      if (!pendingContainer) return;
+      const select = $('#detailContainer', main);
+      if (select) select.value = pendingContainer.from;
+      pendingContainer = null;
+    });
+
+    function openRemoveDialog(ids) {
+      const apps = ids.map(appById).filter(Boolean);
+      const one = apps.length === 1 ? apps[0] : null;
+      const anyPinned = apps.some(a => a.pinned);
+
+      $('#removeDialogTitle').textContent = one ? `Remove ${one.name}?` : `Remove ${ids.length} Taskbar Tabs?`;
+      $('#removeDialogText').textContent = one
+        ? `Firefox deletes the shortcut it created for ${one.name}. ${hostOf(one)} stays available as a normal tab, and your sign-in is kept unless you clear its data.`
+        : `Firefox deletes the shortcuts it created. The sites stay available as normal tabs.`;
+
+      const note = $('#removeDialogPinNote');
+      note.hidden = !anyPinned;
+      note.innerHTML = I.info + '<div class="grow">' + (one
+        ? 'If the icon is still on your taskbar afterwards, right-click it and choose Unpin from taskbar.'
+        : 'If any icons are still on your taskbar afterwards, right-click them and choose Unpin from taskbar.')
+        + '</div>';
+
+      $('#removeClearData').checked = false;
+      $('#removeConfirm').textContent = one ? 'Remove' : `Remove ${ids.length} apps`;
+      $('#removeDialog').showModal();
+    }
+
+    /* ============================================================
+       Dialog handlers
+       ============================================================ */
+    document.querySelectorAll('dialog [data-close]').forEach(btn => {
+      btn.addEventListener('click', () => btn.closest('dialog').close());
+    });
+
+    $('#addForm').addEventListener('submit', e => {
+      const raw = $('#addUrl').value.trim();
+      let url;
+      try {
+        url = new URL(raw);
+        if (!/^https?:$/.test(url.protocol)) throw new Error('scheme');
+      } catch {
+        e.preventDefault();
+        $('#addUrlError').hidden = false;
+        $('#addUrl').setAttribute('aria-invalid', 'true');
+        $('#addUrl').focus();
+        return;
+      }
+      const name = $('#addName').value.trim() || url.host.replace(/^www\./, '');
+      const palette = ['#0f6cbd', '#5b5fc7', '#1fa855', '#2684ff', '#c50042', '#7542e5', '#008787', '#e25b00'];
+      const app = {
+        id: nextId++,
+        name,
+        origin: url.origin,
+        path: url.pathname + url.search,
+        color: palette[state.apps.length % palette.length],
+        letter: name.charAt(0).toUpperCase(),
+        container: $('#addContainer').value,
+        pinned: $('#addPinned').checked,
+        openAtLogin: false,
+        captureLinks: state.captureLinksGlobally,
+        notifications: 'ask', camera: 'ask', microphone: 'ask', location: 'ask',
+        storage: 0,
+        lastUsed: 'Just now',
+        added: 'Today'
+      };
+      state.apps.unshift(app);
+      render();
+      showToast(`${name} added${app.pinned ? ' and pinned to the taskbar' : ''}`,
+        'Open', () => showToast(`${name} opened in its own window`));
+    });
+
+    $('#clearDataForm').addEventListener('submit', () => {
+      const app = appById(pendingClearId);
+      if (app) {
+        app.storage = 0;
+        render();
+        showToast(`Cookies and site data cleared for ${hostOf(app)}`);
+      }
+    });
+
+    $('#removeForm').addEventListener('submit', () => {
+      const alsoClear = $('#removeClearData').checked;
+      const removed = pendingRemoveIds
+        .map(id => ({ app: appById(id), index: state.apps.findIndex(a => a.id === id) }))
+        .filter(r => r.app)
+        .sort((a, b) => a.index - b.index);
+
+      state.apps = state.apps.filter(a => !pendingRemoveIds.includes(a.id));
+      state.selection.clear();
+      if (state.view === 'detail' && pendingRemoveIds.includes(state.detailId)) {
+        state.view = 'list';
+        state.detailId = null;
+      }
+      render();
+
+      const label = removed.length === 1
+        ? `${removed[0].app.name} removed`
+        : `${removed.length} Taskbar Tabs removed`;
+      showToast(alsoClear ? `${label}, site data cleared` : label, 'Undo', () => {
+        removed.forEach(r => state.apps.splice(r.index, 0, r.app));
+        render();
+      });
+
+      pendingRemoveIds = [];
+    });
+
+    /* ============================================================
+       Global behaviour
+       ============================================================ */
+    document.addEventListener('click', e => {
+      if (!e.target.closest('.menu-wrap')) closeAllMenus();
+    });
+
+    document.addEventListener('keydown', e => {
+      if (e.key === 'Escape') closeAllMenus();
+    });
+
+    $('#themeToggle').addEventListener('click', e => {
+      const root = document.documentElement;
+      const dark = root.dataset.theme === 'dark';
+      root.dataset.theme = dark ? 'light' : 'dark';
+      e.target.textContent = dark ? 'Switch to dark theme' : 'Switch to light theme';
+      e.target.setAttribute('aria-pressed', String(!dark));
+    });
+
+    $('#settingsSearch').addEventListener('input', e => {
+      if (e.target.value.trim()) {
+        state.view = 'list';
+        state.query = e.target.value;
+        render();
+        const appSearch = $('#appSearch', main);
+        if (appSearch) appSearch.value = state.query;
+      }
+    });
+
+    render();
+  </script>
+</body>
+
+</html>
