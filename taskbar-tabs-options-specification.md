@@ -23,6 +23,8 @@ Three checkboxes in the Settings card. All apply to Firefox as a whole, for the 
 | **On** | The "Add to taskbar" icon appears at the right of the address bar on every eligible page. Clicking it adds the current tab as a Taskbar Tab. |
 | **Off** | The icon is hidden. Taskbar Tabs can still be added from the tab context menu and from the **Add Taskbar Tab…** button on this page. |
 
+![The address bar button checkbox, turned on](docs/screenshots/spec/1.1-show-urlbar-button.png)
+
 Turning this off never removes existing Taskbar Tabs, and never blocks adding new ones, since it only hides one entry point.
 
 ---
@@ -38,6 +40,8 @@ Turning this off never removes existing Taskbar Tabs, and never blocks adding ne
 |---|---|
 | **On** | Link capture is available. A link to a site you've added opens in that tab's window instead of a new browser tab, for each app that has its own switch on. |
 | **Off** | Link capture is disabled everywhere. All links open in ordinary browser tabs regardless of per-app settings. |
+
+![The link capture checkbox, turned on](docs/screenshots/spec/1.2-open-links.png)
 
 **Interaction with the per-app switch:** this is the master for §4.7. When off, every app's "Open links to this site here" toggle is disabled and shows the message *"Turn on 'Open links in their Taskbar Tab' in Taskbar Tabs settings to use this."* Per-app values are remembered, not erased, and take effect again when this is turned back on.
 
@@ -57,6 +61,8 @@ Turning this off never removes existing Taskbar Tabs, and never blocks adding ne
 | **On** | Taskbar Tab windows are included in session restore and come back when Firefox restarts. |
 | **Off** | Taskbar Tab windows are excluded from session restore, matching Firefox's current behaviour. Ordinary tabs and windows are unaffected either way. |
 
+![The session restore checkbox, turned off](docs/screenshots/spec/1.3-reopen-on-restart.png)
+
 This does not control launching at sign-in, which is per-app (§4.6).
 
 ---
@@ -71,6 +77,10 @@ This does not control launching at sign-in, which is per-app (§4.6).
 | Action | Result |
 |---|---|
 | **Click** | Sets §1.1 to On, §1.2 to On, §1.3 to Off. Shows the toast *"Taskbar Tab settings restored to defaults"*. The button then hides itself. |
+
+![The Settings card with Restore defaults on the heading row](docs/screenshots/spec/1.4-restore-defaults.png)
+
+*Shown with §1.3 changed from its default, which is what makes the button appear.*
 
 **Scope:** the three checkboxes above it only. It does not touch any individual Taskbar Tab, its container, its address, its permissions or its data.
 
@@ -95,6 +105,10 @@ Filters the list live as you type, matching against both the tab's name and its 
 | **Matches found** | Only matching rows shown; sort order preserved. |
 | **No matches** | Empty state: *"No Taskbar Tabs match "…""* with a **Clear search** button. |
 
+![The list filtered by a search term](docs/screenshots/spec/2.1-search.png)
+
+*Searching for `home`, with one row matching.*
+
 Changing the search clears any active selection.
 
 ---
@@ -113,6 +127,8 @@ Changing the search clears any active selection.
 | **Recently added** | Most recently added first. |
 | **Data stored** | Largest stored data first. |
 
+![The search field and sort dropdown](docs/screenshots/spec/2.2-sort-by.png)
+
 Sorting affects display only. It has no effect on taskbar order, which Windows controls.
 
 ---
@@ -129,6 +145,10 @@ Sorting affects display only. It has no effect on taskbar order, which Windows c
 | **Nothing selected** | The "Select all" checkbox is shown. |
 | **One or more selected** | "Select all" is replaced by the bulk action bar reading *"N selected"*, with **Remove** and **Cancel**. |
 
+![The list with two rows selected](docs/screenshots/spec/2.3-selection.png)
+
+*Two rows selected, with the bulk action bar in place of the "Select all" checkbox.*
+
 **Select all** applies to currently *visible* rows, so if a search is active it selects the filtered set only. Clicking it when everything visible is already selected clears the selection.
 
 Selection is cleared by: Cancel, changing the search, or completing a removal.
@@ -142,6 +162,8 @@ Selection is cleared by: Cancel, changing the search, or completing a removal.
 | **Control** | Button in the bulk action bar |
 
 Opens the remove confirmation (§5.4) for every selected tab at once. There is no bulk unpin (see §6).
+
+![The bulk action bar](docs/screenshots/spec/2.4-bulk-remove.png)
 
 ---
 
@@ -160,6 +182,8 @@ Each row has an **Open** button and an overflow (⋯) menu.
 | **Clear cookies and site data…** | Always | Opens the clear-data confirmation (§5.5). |
 | **Remove Taskbar Tab…** | Always | Opens the remove confirmation (§5.4). |
 
+![A row with its overflow menu open](docs/screenshots/spec/3-row-menu.png)
+
 There is deliberately **no unpin option**. See §6.
 
 ### 3.1 Row badges (read-only)
@@ -173,6 +197,8 @@ There is deliberately **no unpin option**. See §6.
 | **Exact page** | The address includes a path, so it opens a specific page rather than the site's home page. |
 
 These are labels, not controls.
+
+![A single row showing its badges](docs/screenshots/spec/3.1-row-badges.png)
 
 ---
 
@@ -191,6 +217,8 @@ Reached by clicking a tab's name, **App settings…**, or **Rename…**.
 Sets the name shown in the Start menu, in Alt+Tab and on this page. Does not change the site.
 
 Changes are held until **Save changes** (§4.4). Submitting an empty name focuses the field and shows *"Give the app a name so you can find it in the Start menu"*.
+
+![The Name field](docs/screenshots/spec/4.1-name.png)
 
 ---
 
@@ -212,6 +240,8 @@ The address the tab opens to. A bare host (`example.com`) opens the site's home 
 
 Whether the tab shows the **Exact page** badge is derived from this field rather than from a separate switch.
 
+![The Address field](docs/screenshots/spec/4.2-address.png)
+
 ---
 
 ### 4.3 Use home page
@@ -225,6 +255,8 @@ Whether the tab shows the **Exact page** badge is derived from this field rather
 Trims the address in the field back to its origin. It edits the draft only, so you still have to save.
 
 A hover/focus tooltip explains it, naming the site: *"Shortens the address to just outlook.office.com. Keep a full address to give one page its own Taskbar Tab."*
+
+![The Use home page button with its tooltip visible](docs/screenshots/spec/4.3-use-home-page.png)
 
 ---
 
@@ -243,6 +275,10 @@ A hover/focus tooltip explains it, naming the site: *"Shortens the address to ju
 | **Cancel** | Discards both edits and restores the saved values. |
 
 Leaving the page also discards unsaved edits.
+
+![The Name and address card with Save changes enabled](docs/screenshots/spec/4.4-save-changes.png)
+
+*Both buttons enable only once a field differs from the saved value.*
 
 ---
 
@@ -264,6 +300,8 @@ Determines which cookies and sign-ins the tab uses.
 
 Applies immediately on confirm, so it is not part of the Save changes form.
 
+![The Container dropdown](docs/screenshots/spec/4.5-container.png)
+
 ---
 
 ### 4.6 Open when I sign in
@@ -279,6 +317,8 @@ Applies immediately on confirm, so it is not part of the Save changes form.
 | **Off** | It starts only when you open it. |
 
 Independent of §1.3, which governs Firefox restarts rather than device sign-in.
+
+![The Open when I sign in toggle](docs/screenshots/spec/4.6-open-at-sign-in.png)
 
 ---
 
@@ -298,6 +338,10 @@ Independent of §1.3, which governs Firefox restarts rather than device sign-in.
 
 Matching is by host, so it covers the whole site, not just the configured address.
 
+![The Open links to this site here toggle](docs/screenshots/spec/4.7-open-links-here.png)
+
+*Shown in its enabled state. When §1.2 is off, the toggle greys out and the description changes.*
+
 ---
 
 ### 4.8 Site permissions (read-only)
@@ -307,6 +351,8 @@ Four rows (Notifications, Camera, Microphone, Location), each showing **Allowed*
 **Not editable here, by design.** Firefox grants permissions to a site, not to a Taskbar Tab, so these values apply to the host everywhere in the profile, including ordinary tabs. The page says so explicitly.
 
 **Change permissions for {host}** links out to site permissions, where the change is presented at its true, site-wide scope.
+
+![The read-only Site permissions card](docs/screenshots/spec/4.8-site-permissions.png)
 
 ---
 
@@ -318,6 +364,8 @@ Four rows (Notifications, Camera, Microphone, Location), each showing **Allowed*
 
 Shows the amount stored for the host in this tab's container, and notes that tabs using the same container share it. Opens the clear-data confirmation (§5.5).
 
+![The Cookies and site data row](docs/screenshots/spec/4.9-clear-data.png)
+
 ---
 
 ### 4.10 Remove Taskbar Tab
@@ -327,6 +375,8 @@ Shows the amount stored for the host in this tab's container, and notes that tab
 | **Control** | Button in Data and removal |
 
 Opens the remove confirmation (§5.4).
+
+![The Remove this Taskbar Tab row](docs/screenshots/spec/4.10-remove.png)
 
 ---
 
@@ -344,6 +394,8 @@ Opened by **Add Taskbar Tab…**.
 | **Pin to taskbar** | Checked | Asks Windows to add the icon. |
 
 On success the tab is added to the top of the list and a toast confirms, offering **Open**.
+
+![The Add a Taskbar Tab dialog](docs/screenshots/spec/5.1-add-dialog.png)
 
 ---
 
@@ -364,6 +416,10 @@ Shown only when saving a **pinned** tab's name or address.
 
 The URL shown is the normalised version that will be written to the shortcut.
 
+![The Save changes confirmation dialog](docs/screenshots/spec/5.2-save-dialog.png)
+
+*Shown with both the name and the address changed.*
+
 ---
 
 ### 5.3 Change container?
@@ -378,6 +434,8 @@ The URL shown is the normalised version that will be written to the shortcut.
 |---|---|
 | **Move to {container}** | Applies; stored data resets to zero; toast offers **Undo**. |
 | **Cancel / Escape / outside click** | Reverts the dropdown. |
+
+![The Change container confirmation dialog](docs/screenshots/spec/5.3-container-dialog.png)
 
 ---
 
@@ -397,6 +455,8 @@ The URL shown is the normalised version that will be written to the shortcut.
 
 Removing the tab you're currently viewing returns you to the list.
 
+![The Remove Taskbar Tab confirmation dialog](docs/screenshots/spec/5.4-remove-dialog.png)
+
 ---
 
 ### 5.5 Clear cookies and site data?
@@ -407,6 +467,8 @@ Body names the amount, the host, and warns that tabs using the same container ar
 |---|---|
 | **Clear data** | Stored data resets to zero; toast confirms. **Not undoable.** |
 | **Cancel / Escape** | Nothing changes. |
+
+![The Clear cookies and site data confirmation dialog](docs/screenshots/spec/5.5-clear-data-dialog.png)
 
 ---
 
@@ -422,6 +484,10 @@ Windows controls the taskbar, not the browser. Firefox can request that an icon 
 | Bulk unpin | **No** | n/a |
 
 Because of this there is no pin toggle, no unpin menu item and no bulk unpin. The interface warns in two places where a pin may be affected: when saving a pinned tab's name or address, and when removing a pinned tab.
+
+![The row menu for an unpinned tab](docs/screenshots/spec/6-pinning.png)
+
+*The menu for an unpinned tab offers **Pin to taskbar**, and no unpin action exists anywhere in the interface.*
 
 ---
 
@@ -439,6 +505,8 @@ Toasts appear at the bottom of the window, dismiss automatically after about eig
 | Restore defaults | No |
 | Pin to taskbar | No |
 
+![A toast offering Undo](docs/screenshots/spec/7-undo-toast.png)
+
 ---
 
 ## 8. Page states
@@ -450,3 +518,7 @@ Toasts appear at the bottom of the window, dismiss automatically after about eig
 | **No search results** | Search matches nothing | The message and a **Clear search** button; the list is otherwise intact |
 | **Selection active** | One or more rows selected | Bulk action bar replaces the "Select all" checkbox |
 | **App settings** | A tab is opened | Sub-page with a three-level breadcrumb and a back link |
+
+![The empty state](docs/screenshots/spec/8-empty-state.png)
+
+*Shown when no Taskbar Tabs exist.*
