@@ -8,9 +8,11 @@ Firefox 143 shipped the ability to turn a site into a Taskbar Tab, and this desi
 
 Both names are in circulation: the support docs say "web apps", while Firefox's own source and Mozilla's public discussion say "Taskbar Tabs". We use Taskbar Tabs throughout, in title case, as a proper feature name, because a feature that calls itself two different things on one screen teaches people nothing. The address bar button is the one exception, still labelled **Add to taskbar**, since that is its real label in Firefox today.
 
-## Why a sub-page under Browsing
+## Its own sidebar item, not a card inside another page
 
-Acorn's settings guidance is to fit new settings into an existing category rather than invent one, and Browsing already holds Tab management, Applications and Downloads. Managing a list of installed things needs more room than a settings card gives, so it becomes a sub-page with a breadcrumb, which is what Acorn recommends for this case.
+Firefox's redesigned Settings has a flat, icon-led sidebar with grouped entries, so the question is no longer which category to bury this in. Managing a list of installed things needs more room than a settings card gives, and the feature is not a property of tab behaviour, so Taskbar Tabs gets its own entry directly below Tabs and browsing, where someone looking for it will pass through anyway.
+
+That layout has no breadcrumbs, so this design has none either. The one place that still needs a way back is the per-app page, which keeps an explicit **All Taskbar Tabs** button rather than reintroducing a navigation pattern the rest of Settings dropped.
 
 ## Three settings, and no master switch
 

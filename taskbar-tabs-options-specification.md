@@ -2,7 +2,7 @@
 
 Every configurable option in the interface, what each of its states does, and how it behaves at the edges.
 
-**Location:** `about:settings` → Browsing → Taskbar Tabs
+**Location:** Settings → Taskbar Tabs (`about:preferences#taskbarTabs`), its own sidebar item directly below Tabs and browsing
 **Platform:** Windows desktop (Linux behaviour follows where supported; macOS not covered)
 
 ---
@@ -517,7 +517,7 @@ Toasts appear at the bottom of the window, dismiss automatically after about eig
 | **Empty** | No Taskbar Tabs at all | Settings card, plus an empty state explaining how to add one and an **Add Taskbar Tab…** button |
 | **No search results** | Search matches nothing | The message and a **Clear search** button; the list is otherwise intact |
 | **Selection active** | One or more rows selected | Bulk action bar replaces the "Select all" checkbox |
-| **App settings** | A tab is opened | Sub-page with a three-level breadcrumb and a back link |
+| **App settings** | A tab is opened | Sub-page with an **All Taskbar Tabs** back button. There are no breadcrumbs, matching the rest of Settings |
 
 ![The empty state](docs/screenshots/spec/8-empty-state.png)
 

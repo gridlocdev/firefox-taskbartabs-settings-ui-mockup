@@ -2,7 +2,7 @@
 
 Firefox can turn a website into a **Taskbar Tab**: its own window, its own icon, pinned to the taskbar. But once you've added a few, there's no way to manage them: no list, no rename, and no way to change the page one opens to.
 
-This is a design prototype for that missing settings page: `about:settings` → Browsing → Taskbar Tabs.
+This is a design prototype for that missing settings page, which sits in Firefox's redesigned Settings as its own sidebar item directly below Tabs and browsing.
 
 ## What's here
 
