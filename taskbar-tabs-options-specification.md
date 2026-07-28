@@ -20,7 +20,7 @@ Three checkboxes in the Settings card. All apply to Firefox as a whole, for the 
 
 | State | Behaviour |
 |---|---|
-| **On** | The "Add to taskbar" icon appears at the right of the address bar on every eligible page. Clicking it adds the current tab as a Taskbar Tab. |
+| **On** | The "Add to taskbar" icon appears at the right of the address bar on every eligible page. Clicking it adds the current tab as a Taskbar Tab. On a site that provides an app (§9) the button reads **Install {name}** instead. |
 | **Off** | The icon is hidden. Taskbar Tabs can still be added from the tab context menu and from the **Add Taskbar Tab…** button on this page. |
 
 ![The address bar button checkbox, turned on](docs/screenshots/spec/1.1-show-urlbar-button.png)
@@ -97,7 +97,9 @@ While hidden the button reserves its space (so nothing shifts) and is excluded f
 | **Control** | Search field |
 | **Default** | Empty |
 
-Filters the list live as you type, matching against both the tab's name and its address. Case-insensitive.
+Filters the list live as you type, matching against the tab's name, its address, and the name the site provides (§9). Case-insensitive.
+
+Matching the site-provided name matters because an app renamed to "Work Mail" is still the thing someone will search for as "Outlook".
 
 | Condition | Result |
 |---|---|
@@ -190,6 +192,8 @@ There is deliberately **no unpin option**. See §6.
 
 | Badge | Meaning |
 |---|---|
+| **From the site** | The app's name, icon and start page come from the site (§9). |
+| **Added by you** | The address and name were chosen by the person, not the site. |
 | **Pinned to taskbar** | The icon is currently on the taskbar. |
 | **Not pinned** | The tab exists but has no taskbar icon. |
 | *Container name* + colour dot | The container the tab runs in. Absent when no container is set. |
@@ -206,17 +210,30 @@ These are labels, not controls.
 
 Reached by clicking a tab's name, **App settings…**, or **Rename…**.
 
+For a tab whose identity comes from the site (§9), the header carries one extra line:
+*"This app is provided by {host}, which sets its name, icon and start page. You can rename it here for yourself."*
+Nothing else on the page changes shape.
+
 ### 4.1 Name
 
 | | |
 |---|---|
 | **Control** | Text field, part of the Name and address form |
-| **Default** | The name given when the tab was added |
+| **Default** | The name given when the tab was added, or the site-provided name |
 | **Validation** | Cannot be empty |
 
 Sets the name shown in the Start menu, in Alt+Tab and on this page. Does not change the site.
 
 Changes are held until **Save changes** (§4.4). Submitting an empty name focuses the field and shows *"Give the app a name so you can find it in the Start menu"*.
+
+**Editable for both kinds.** The name is a private label: it is never transmitted, never used in an origin decision and never a security boundary, so a site-provided name can be replaced with a local one.
+
+| Element | Shown when |
+|---|---|
+| *"The site calls this app "{site name}"."* appended to the field description | The tab came from the site |
+| **Use the name from the site** button | The current name differs from the site's |
+
+The site's name stays visible whether or not it is in use, so the developer's claim is always legible.
 
 ![The Name field](docs/screenshots/spec/4.1-name.png)
 
@@ -240,21 +257,42 @@ The address the tab opens to. A bare host (`example.com`) opens the site's home 
 
 Whether the tab shows the **Exact page** badge is derived from this field rather than from a separate switch.
 
+**Constrained for tabs that came from the site.** The field stays editable, but the address must fall inside the area the app declares, so a description sits beneath it: *"Must stay within `outlook.office.com/mail/`, the area this app covers."*
+
+| Input | Result on save |
+|---|---|
+| **Inside the area** | Saved normally. Opening at `/mail/calendar` instead of `/mail/inbox` is allowed |
+| **Outside the area** | Rejected. The field is marked invalid and shows *"`example.com/inbox` is outside this app's area. {name} covers `outlook.office.com/mail/`. To open a different page in its own window, add a Taskbar Tab."*, followed by an **Add a Taskbar Tab instead** button that opens §5.1 prefilled with what was typed |
+
+The field is validated rather than disabled. A disabled field says only "you can't"; a validated one teaches the rule at the moment it matters and leaves a working alternative in reach.
+
+There is **no advanced override**. Every legitimate need is met by editing within the area or by adding a separate Taskbar Tab; an override would add only the case where an app keeps its name and icon while pointing somewhere else.
+
 ![The Address field](docs/screenshots/spec/4.2-address.png)
+
+*The Address field of an app from the site, with the area it covers stated beneath it.*
+
+![The Address field rejecting an out-of-scope address](docs/screenshots/spec/4.2-out-of-scope.png)
+
+*The rejection names what was typed, the rule, and what to do instead.*
 
 ---
 
-### 4.3 Use home page
+### 4.3 Use home page / Use start page
 
 | | |
 |---|---|
 | **Control** | Button beside the Address field |
-| **Enabled when** | The address currently includes a path |
-| **Disabled when** | The address is already just the site |
+| **Label** | **Use home page** for a tab you added; **Use start page** for one from the site |
 
-Trims the address in the field back to its origin. It edits the draft only, so you still have to save.
+| Kind | Enabled when | Result |
+|---|---|---|
+| **Added by you** | The address includes a path | Trims the address back to its origin |
+| **From the site** | The address differs from the app's start page | Resets it to the start page the app declares |
 
-A hover/focus tooltip explains it, naming the site: *"Shortens the address to just outlook.office.com. Keep a full address to give one page its own Taskbar Tab."*
+It edits the draft only, so you still have to save.
+
+A hover/focus tooltip explains it, naming the target: *"Shortens the address to just outlook.office.com. Keep a full address to give one page its own Taskbar Tab."*, or *"Resets the address to https://outlook.office.com/mail/, the start page this app declares."*
 
 ![The Use home page button with its tooltip visible](docs/screenshots/spec/4.3-use-home-page.png)
 
@@ -376,7 +414,49 @@ Shows the amount stored for the host in this tab's container, and notes that tab
 
 Opens the remove confirmation (§5.4).
 
+Wording is the same for both kinds. What is removed is the Taskbar Tab: the site is not uninstalled, and it stays available in a normal tab, which is what the dialog already says.
+
 ![The Remove this Taskbar Tab row](docs/screenshots/spec/4.10-remove.png)
+
+---
+
+### 4.11 This site provides an app
+
+| | |
+|---|---|
+| **Control** | Information bar at the top of the Name and address card |
+| **Shown when** | The tab was added by hand, and its site turns out to provide an app |
+
+Reads *"**This site provides an app.** {host} offers {name} with its own name, icon and start page. Switching keeps your container, startup and link settings."*
+
+| Action | Result |
+|---|---|
+| **Switch to the app…** | Adopts the site's name, icon, start page and area. Rebuilds the shortcut, so a pinned tab gets the save confirmation (§5.2) first. A name the person chose is kept, becoming a local override |
+| **Not now** | Hides the bar for this tab |
+
+![The information bar offering to switch to the app a site provides](docs/screenshots/spec/4.11-site-app.png)
+
+---
+
+### 4.12 Renamed by the site
+
+The one value on this page that can change without the person doing anything.
+
+| Situation | Behaviour |
+|---|---|
+| A local name is set | Keep it. The site's new name appears in the field description and nowhere else |
+| No local name | Adopt the new name and rebuild the shortcut |
+
+Adoption is never silent. An information bar sits at the top of the Name and address card until dismissed: *"{host} renamed this app from **{old}** to **{new}** on {date}."*
+
+The date reads **July 12** for a rename in the current year and **July 12, 2025** for one before it, so the year takes up space only when it is not the obvious one.
+
+| Action | Result |
+|---|---|
+| **Keep calling it {old}** | Writes {old} as a local name, using the same mechanism as a manual rename, and dismisses the bar |
+| **Dismiss** | Keeps the new name and hides the bar |
+
+![The information bar announcing a rename by the site](docs/screenshots/spec/4.12-renamed.png)
 
 ---
 
@@ -393,9 +473,22 @@ Opened by **Add Taskbar Tab…**.
 | **Container** | No container | Set once, here. |
 | **Pin to taskbar** | Checked | Asks Windows to add the icon. |
 
+**When the address resolves to a site that provides an app**, a choice appears between the Address and Name fields rather than the browser deciding silently:
+
+| Option | Effect |
+|---|---|
+| **Add {name}, the app this site provides** (default) | Name is prefilled from the site and stays editable; the address becomes the app's start page, and the field description says so |
+| **Add a shortcut to this page** | Name and address are both the person's, exactly as before |
+
+**Duplicates** are caught on submit. If a Taskbar Tab already opens the resulting address, the field is marked invalid and shows *"{name} already opens this address. Open it from the list, or choose a different page."*
+
 On success the tab is added to the top of the list and a toast confirms, offering **Open**.
 
 ![The Add a Taskbar Tab dialog](docs/screenshots/spec/5.1-add-dialog.png)
+
+![The Add dialog offering the app or a shortcut](docs/screenshots/spec/5.1-add-app-choice.png)
+
+*Shown for a site that provides an app. Choosing the app replaces the "opens at exactly this address" line, since the start page is the site's to set.*
 
 ---
 
@@ -501,6 +594,8 @@ Toasts appear at the bottom of the window, dismiss automatically after about eig
 | Change container | Yes, restores container and stored-data figure |
 | Add a Taskbar Tab | No, but the toast offers **Open** |
 | Save name / address | No, because the confirmation dialog is the checkpoint |
+| Switch to the app a site provides | No, for the same reason |
+| Decline a rename by the site | No, but it only writes a name you can change again |
 | Clear cookies and site data | No |
 | Restore defaults | No |
 | Pin to taskbar | No |
@@ -522,3 +617,37 @@ Toasts appear at the bottom of the window, dismiss automatically after about eig
 ![The empty state](docs/screenshots/spec/8-empty-state.png)
 
 *Shown when no Taskbar Tabs exist.*
+
+---
+
+## 9. Where each value comes from
+
+Two kinds of entry share the list. One was typed in by hand; the other was declared by the site in a manifest, where the name, icon, start page and area belong to the developer.
+
+| | Added by you | From the site |
+|---|---|---|
+| **Name** | Yours | The site's, replaceable with a local one (§4.1) |
+| **Address it opens** | Any valid `http(s)` URL | The declared start page, editable within the app's area (§4.2) |
+| **Area it covers** | Inferred: the host of the address | Declared by the site |
+| **Icon** | Favicon | From the site |
+| **Can change on its own** | No | Yes: the name, when the site is updated (§4.12) |
+
+![A row showing the From the site badge alongside the others](docs/screenshots/spec/3.1-row-badges.png)
+
+They share one list rather than two sections. Someone looking for Teams should not have to know how Teams arrived in order to find it. The difference is a property of a row, shown as a badge (§3.1), not an organising principle for the page.
+
+**The badge is not a trust signal.** A manifest is asserted by whoever controls the origin, and Firefox verifies nothing beyond that, so **From the site** carries no checkmark, shield or "Verified".
+
+### Why the name is editable and the address is not
+
+The name is a private label with no security role, and renaming an installed app is the thing most often missing from equivalent features elsewhere, since installing one site across several profiles leaves several identically named icons. Locking it would buy nothing.
+
+The address is different. A window that presents itself as an app, wears the site's icon, sits on the taskbar and holds the site's cookies and permissions is making a claim about what it is. Letting it be repointed anywhere is how that claim becomes a lie. So the address is held to the area the app declares, which is the site's own statement about its extent, not a restriction Firefox invented.
+
+### Not built
+
+- Two list sections, a Type column, or a provenance filter.
+- A hidden advanced override for the address (§4.2).
+- Editable icons, for either kind.
+- A verified or trusted badge.
+- Separate "Uninstall" vocabulary (§4.10).

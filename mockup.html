@@ -225,7 +225,7 @@
       min-width: 0;
     }
 
-    /* Brand row — the new Settings design leads with the Firefox mark */
+    /* Brand row: the new Settings design leads with the Firefox mark */
     .nav-brand {
       display: flex;
       align-items: center;
@@ -609,6 +609,10 @@
       border: 0;
       margin: 0;
       padding: 0;
+    }
+
+    .radio-group[hidden] {
+      display: none;
     }
 
     .radio-group legend {
@@ -1601,10 +1605,30 @@
         <label for="addUrl">Address</label>
         <input class="input" id="addUrl" type="text" placeholder="https://example.com/mail" required spellcheck="false"
           autocapitalize="off">
-        <p class="description">The app opens at exactly this address. You can change it later.</p>
+        <p class="description" id="addUrlHelp">The app opens at exactly this address. You can change it later.</p>
+        <p class="description" id="addStartNote" hidden></p>
         <p class="description" id="addUrlError" hidden style="color: var(--text-color-error)">Enter a web address that
           starts with https:// or http://</p>
       </div>
+
+      <!-- Shown only when the address resolves to a site that publishes a
+           manifest, so the choice is offered rather than made silently. -->
+      <fieldset class="radio-group" id="addSourceGroup" hidden style="margin-bottom: var(--space-large)">
+        <legend>How should this be added?</legend>
+        <label class="radio">
+          <input type="radio" name="addSource" id="addSourceSite" value="site" checked>
+          <span>Add <strong id="addSiteName">the app</strong>, the app this site provides
+            <p class="description" id="addSiteHelp">Uses the name, icon and start page from the site.</p>
+          </span>
+        </label>
+        <label class="radio">
+          <input type="radio" name="addSource" id="addSourceUser" value="user">
+          <span>Add a shortcut to this page
+            <p class="description">You choose the name and the exact address.</p>
+          </span>
+        </label>
+      </fieldset>
+
       <div class="field">
         <label for="addName">Name</label>
         <input class="input" id="addName" type="text" placeholder="Example">
@@ -1644,7 +1668,7 @@
       </div>
       <div class="dialog-actions">
         <button class="button" type="button" data-close>Cancel</button>
-        <button class="button primary" type="submit">Save changes</button>
+        <button class="button primary" type="submit" id="saveConfirm">Save changes</button>
       </div>
     </form>
   </dialog>
@@ -1720,6 +1744,19 @@
 
     const PERM_LABELS = { allow: 'Allowed', ask: 'Ask every time', block: 'Blocked' };
 
+    /* Stand-in for reading a site's .webmanifest. Keyed by origin, so typing one
+       of these addresses into the Add dialog surfaces the app-or-shortcut choice.
+       `start` is the manifest's start_url path; `scope` is the area it declares. */
+    const MANIFESTS = {
+      'https://outlook.office.com': { name: 'Microsoft Outlook', start: '/mail/', scope: '/mail/' },
+      'https://teams.microsoft.com': { name: 'Microsoft Teams', start: '/v2/', scope: '/v2/' },
+      'https://web.whatsapp.com': { name: 'WhatsApp Web', start: '/', scope: '/' },
+      'https://www.photopea.com': { name: 'Photopea', start: '/', scope: '/' },
+      'https://app.slack.com': { name: 'Slack', start: '/client', scope: '/client' },
+      'https://music.youtube.com': { name: 'YouTube Music', start: '/', scope: '/' },
+      'https://excalidraw.com': { name: 'Excalidraw', start: '/', scope: '/' }
+    };
+
     let nextId = 100;
 
     const state = {
@@ -1734,13 +1771,18 @@
       draft: null,
       focusField: null,
       lastRemoved: null,
+      urlError: null,                // { message, offerUrl } while the address field is rejected
+      /* `source` is where the app's identity comes from:
+           'site': declared in the site's manifest. siteName, startPath and scope
+                   belong to the developer; `name` may hold a local override.
+           'user': the person typed an address and chose a name. */
       apps: [
-        { id: 1, name: 'Outlook', origin: 'https://outlook.office.com', path: '/mail/', color: '#0f6cbd', letter: 'O', container: 'work', pinned: true, openAtLogin: true, captureLinks: true, notifications: 'allow', camera: 'ask', microphone: 'ask', location: 'block', storage: 184, lastUsed: 'Today at 09:12', added: '12 Mar 2026' },
-        { id: 2, name: 'Teams', origin: 'https://teams.microsoft.com', path: '/v2/', color: '#5b5fc7', letter: 'T', container: 'work', pinned: true, openAtLogin: true, captureLinks: true, notifications: 'allow', camera: 'allow', microphone: 'allow', location: 'block', storage: 402, lastUsed: 'Today at 08:40', added: '12 Mar 2026' },
-        { id: 3, name: 'WhatsApp Web', origin: 'https://web.whatsapp.com', path: '/', color: '#1fa855', letter: 'W', container: 'personal', pinned: true, openAtLogin: false, captureLinks: false, notifications: 'allow', camera: 'ask', microphone: 'allow', location: 'block', storage: 96, lastUsed: 'Yesterday at 21:04', added: '02 Feb 2026' },
-        { id: 4, name: 'Jira', origin: 'https://mozilla.atlassian.net', path: '/jira/software/projects', color: '#2684ff', letter: 'J', container: 'work', pinned: false, openAtLogin: false, captureLinks: true, notifications: 'block', camera: 'block', microphone: 'block', location: 'block', storage: 41, lastUsed: '3 days ago', added: '28 Jan 2026' },
-        { id: 5, name: 'Photopea', origin: 'https://www.photopea.com', path: '/', color: '#1a6fb4', letter: 'P', container: 'none', pinned: true, openAtLogin: false, captureLinks: false, notifications: 'block', camera: 'block', microphone: 'block', location: 'block', storage: 12, lastUsed: '1 week ago', added: '19 Dec 2025' },
-        { id: 6, name: 'Home Assistant', origin: 'http://homeassistant.local:8123', path: '/lovelace/0', color: '#18bcf2', letter: 'H', container: 'personal', pinned: true, openAtLogin: true, captureLinks: false, notifications: 'allow', camera: 'ask', microphone: 'ask', location: 'allow', storage: 8, lastUsed: 'Today at 07:55', added: '05 Nov 2025' }
+        { id: 1, name: 'Microsoft Outlook', origin: 'https://outlook.office.com', path: '/mail/', color: '#0f6cbd', letter: 'O', container: 'work', pinned: true, openAtLogin: true, captureLinks: true, notifications: 'allow', camera: 'ask', microphone: 'ask', location: 'block', storage: 184, lastUsed: 'Today at 09:12', added: '12 Mar 2026', source: 'site', siteName: 'Microsoft Outlook', startPath: '/mail/', scope: '/mail/', siteRename: { from: 'Outlook', on: '2026-07-12' } },
+        { id: 2, name: 'Teams', origin: 'https://teams.microsoft.com', path: '/v2/', color: '#5b5fc7', letter: 'T', container: 'work', pinned: true, openAtLogin: true, captureLinks: true, notifications: 'allow', camera: 'allow', microphone: 'allow', location: 'block', storage: 402, lastUsed: 'Today at 08:40', added: '12 Mar 2026', source: 'site', siteName: 'Microsoft Teams', startPath: '/v2/', scope: '/v2/' },
+        { id: 3, name: 'WhatsApp Web', origin: 'https://web.whatsapp.com', path: '/', color: '#1fa855', letter: 'W', container: 'personal', pinned: true, openAtLogin: false, captureLinks: false, notifications: 'allow', camera: 'ask', microphone: 'allow', location: 'block', storage: 96, lastUsed: 'Yesterday at 21:04', added: '02 Feb 2026', source: 'site', siteName: 'WhatsApp Web', startPath: '/', scope: '/' },
+        { id: 4, name: 'Jira', origin: 'https://mozilla.atlassian.net', path: '/jira/software/projects', color: '#2684ff', letter: 'J', container: 'work', pinned: false, openAtLogin: false, captureLinks: true, notifications: 'block', camera: 'block', microphone: 'block', location: 'block', storage: 41, lastUsed: '3 days ago', added: '28 Jan 2026', source: 'user' },
+        { id: 5, name: 'Photopea', origin: 'https://www.photopea.com', path: '/', color: '#1a6fb4', letter: 'P', container: 'none', pinned: true, openAtLogin: false, captureLinks: false, notifications: 'block', camera: 'block', microphone: 'block', location: 'block', storage: 12, lastUsed: '1 week ago', added: '19 Dec 2025', source: 'user' },
+        { id: 6, name: 'Home Assistant', origin: 'http://homeassistant.local:8123', path: '/lovelace/0', color: '#18bcf2', letter: 'H', container: 'personal', pinned: true, openAtLogin: true, captureLinks: false, notifications: 'allow', camera: 'ask', microphone: 'ask', location: 'allow', storage: 8, lastUsed: 'Today at 07:55', added: '05 Nov 2025', source: 'user' }
       ]
     };
 
@@ -1770,10 +1812,46 @@
       return mb >= 1024 ? (mb / 1024).toFixed(1) + ' GB' : mb + ' MB';
     }
 
+    /* ---- Provenance ------------------------------------------------------ */
+
+    function isSiteApp(app) { return app.source === 'site'; }
+
+    /* True when the person has given a site-declared app their own name. */
+    function hasLocalName(app) { return isSiteApp(app) && app.name !== app.siteName; }
+
+    /* The area a site app covers, written the way it appears in the address bar
+       so it can be compared against what was typed. */
+    function scopeLabel(app) { return hostOf(app) + app.scope; }
+
+    function startUrl(app) {
+      return app.startPath === '/' ? app.origin : app.origin + app.startPath;
+    }
+
+    function inScope(app, parsed) {
+      return parsed.origin === app.origin && parsed.pathname.startsWith(app.scope);
+    }
+
+    /* “July 12” for a rename this year, “July 12, 2025” for one before it, since
+       the year only earns its space when it is not the obvious one. */
+    function formatRenameDate(iso) {
+      const d = new Date(iso + 'T00:00:00');
+      const opts = { month: 'long', day: 'numeric' };
+      if (d.getFullYear() !== new Date().getFullYear()) opts.year = 'numeric';
+      return d.toLocaleDateString('en-US', opts);
+    }
+
+    /* A manually added shortcut whose site turns out to publish an app. */
+    function offeredManifest(app) {
+      return app.source === 'user' && !app.offerDismissed ? MANIFESTS[app.origin] : null;
+    }
+
     function visibleApps() {
       const q = state.query.trim().toLowerCase();
+      // Also match the site-provided name, so an app renamed to “Work Mail” is
+      // still findable by searching for Outlook.
       let list = state.apps.filter(a =>
         !q || a.name.toLowerCase().includes(q) || a.origin.toLowerCase().includes(q)
+        || (a.siteName || '').toLowerCase().includes(q)
       );
       const order = { name: (a, b) => a.name.localeCompare(b.name) };
       if (state.sort === 'name') list.sort(order.name);
@@ -1940,6 +2018,9 @@
           <span>${esc(app.lastUsed)}</span>
         </div>
         <div class="app-badges">
+          ${isSiteApp(app)
+          ? '<span class="badge">From the site</span>'
+          : '<span class="badge">Added by you</span>'}
           ${app.pinned
           ? '<span class="badge accent">Pinned to taskbar</span>'
           : '<span class="badge">Not pinned</span>'}
@@ -2003,6 +2084,15 @@
       const draft = state.draft || (state.draft = { name: app.name, url: displayUrl(app) });
       const dirty = draft.name !== app.name || draft.url !== displayUrl(app);
 
+      const site = isSiteApp(app);
+      const offer = offeredManifest(app);
+      const localName = hasLocalName(app);
+      // The reset button beside the address means “back to the start page” for a
+      // site app and “back to the site’s home page” for one the user added.
+      const resetDisabled = site
+        ? draft.url === startUrl(app)
+        : /^https?:\/\/[^/]+\/?$/.test(draft.url);
+
       const permRow = (label, value, help) => `
     <div class="summary-row">
       <div>
@@ -2022,6 +2112,11 @@
       <div style="flex: 1">
         <h1 style="font-size: var(--font-size-heading-large)">${esc(app.name)}</h1>
         <p class="description">${esc(displayUrl(app))} · Added ${esc(app.added)} · Last opened ${esc(app.lastUsed)}</p>
+        ${site ? `
+          <p class="description" style="margin-top: var(--space-xxsmall)">
+            This app is provided by ${esc(hostOf(app))}, which sets its name, icon and start page.
+            You can rename it here for yourself.
+          </p>` : ''}
       </div>
       <button class="button primary" data-action="launch" data-id="${app.id}">${I.open} Open</button>
     </div>
@@ -2032,26 +2127,69 @@
         Saving either of these rebuilds this app’s shortcut.
       </p>
 
+      ${site && app.siteRename && !app.siteRenameDismissed ? `
+        <div class="message-bar information">
+          ${I.info}
+          <div class="grow">
+            ${esc(hostOf(app))} renamed this app from <strong>${esc(app.siteRename.from)}</strong>
+            to <strong>${esc(app.siteName)}</strong> on ${esc(formatRenameDate(app.siteRename.on))}.
+            <div class="form-actions">
+              <button class="button" data-action="keep-old-name" data-id="${app.id}">Keep calling it ${esc(app.siteRename.from)}</button>
+              <button class="button ghost" data-action="dismiss-rename" data-id="${app.id}">Dismiss</button>
+            </div>
+          </div>
+        </div>` : ''}
+
+      ${offer ? `
+        <div class="message-bar information">
+          ${I.info}
+          <div class="grow">
+            <strong>This site provides an app.</strong>
+            ${esc(hostOf(app))} offers ${esc(offer.name)} with its own name, icon and start page.
+            Switching keeps your container, startup and link settings.
+            <div class="form-actions">
+              <button class="button" data-action="switch-to-app" data-id="${app.id}">Switch to the app…</button>
+              <button class="button ghost" data-action="dismiss-offer" data-id="${app.id}">Not now</button>
+            </div>
+          </div>
+        </div>` : ''}
+
       <div class="field">
         <label for="detailName">Name</label>
         <input class="input" id="detailName" type="text" value="${esc(draft.name)}" data-fk="detailName">
-        <p class="description">Shown in the Start menu and Alt+Tab.</p>
+        <p class="description">
+          Shown in the Start menu and Alt+Tab.${site ? ` The site calls this app “${esc(app.siteName)}”.` : ''}
+        </p>
+        ${localName ? `
+          <div><button class="button" data-action="use-site-name" data-id="${app.id}">Use the name from the site</button></div>` : ''}
       </div>
 
       <div class="field">
         <label for="detailUrl">Address</label>
         <div style="display: flex; gap: var(--space-small); flex-wrap: wrap; align-items: flex-start">
           <input class="input" id="detailUrl" type="text" value="${esc(draft.url)}" data-fk="detailUrl"
-                 style="flex: 1 1 240px" spellcheck="false" autocapitalize="off">
+                 style="flex: 1 1 240px" spellcheck="false" autocapitalize="off"
+                 ${state.urlError ? 'aria-invalid="true" aria-describedby="detailUrlError"' : ''}>
           <span class="tooltip-wrap">
             <button class="button" type="button" data-action="use-home-page" data-id="${app.id}"
                     aria-describedby="homePageTip"
-                    ${/^https?:\/\/[^/]+\/?$/.test(draft.url) ? 'disabled' : ''}>Use home page</button>
+                    ${resetDisabled ? 'disabled' : ''}>${site ? 'Use start page' : 'Use home page'}</button>
             <span class="tooltip" role="tooltip" id="homePageTip">
-              Shortens the address to just ${esc(hostOf(app))}. Keep a full address to give one page its own Taskbar Tab.
+              ${site
+          ? 'Resets the address to ' + esc(startUrl(app)) + ', the start page this app declares.'
+          : 'Shortens the address to just ' + esc(hostOf(app)) + '. Keep a full address to give one page its own Taskbar Tab.'}
             </span>
           </span>
         </div>
+        ${site ? `
+          <p class="description">
+            Must stay within <strong>${esc(scopeLabel(app))}</strong>, the area this app covers.
+          </p>` : ''}
+        ${state.urlError ? `
+          <p class="description" id="detailUrlError" style="color: var(--text-color-error)">${state.urlError.message}</p>
+          ${state.urlError.offerUrl ? `
+            <div><button class="button" data-action="add-out-of-scope">Add a Taskbar Tab instead</button></div>` : ''}
+        ` : ''}
       </div>
 
       <div class="form-actions">
@@ -2192,7 +2330,7 @@
         el.addEventListener('click', () => {
           state.detailId = Number(el.dataset.openDetail);
           state.view = 'detail';
-          state.draft = null;
+          state.draft = null; state.urlError = null;
           closeAllMenus();
           render();
           window.scrollTo({ top: 0, behavior: 'smooth' });
@@ -2235,6 +2373,15 @@
       $('#detailUrl', main).addEventListener('input', e => {
         state.draft.url = e.target.value;
         e.target.removeAttribute('aria-invalid');
+        // Clear the rejection in place rather than re-rendering, so the caret
+        // stays where the person is typing.
+        if (state.urlError) {
+          state.urlError = null;
+          const err = $('#detailUrlError', main);
+          if (err) err.remove();
+          const recover = main.querySelector('[data-action="add-out-of-scope"]');
+          if (recover) recover.parentElement.remove();
+        }
         syncDirty();
       });
 
@@ -2271,7 +2418,7 @@
         case 'back':
           state.view = 'list';
           state.detailId = null;
-          state.draft = null;
+          state.draft = null; state.urlError = null;
           render();
           break;
 
@@ -2284,6 +2431,9 @@
           break;
 
         case 'use-home-page': {
+          // For a site app this resets to the declared start page; for one the
+          // person added it trims back to the site’s home page.
+          if (isSiteApp(app)) { state.draft.url = startUrl(app); render(); break; }
           try {
             const parsed = new URL(/^https?:\/\//i.test(state.draft.url) ? state.draft.url : 'https://' + state.draft.url);
             state.draft.url = parsed.origin;
@@ -2301,11 +2451,22 @@
             parsed = new URL(/^https?:\/\//i.test(raw) ? raw : 'https://' + raw);
             if (!/^https?:$/.test(parsed.protocol)) throw new Error('scheme');
           } catch {
-            const field = $('#detailUrl', main);
-            if (field) { field.setAttribute('aria-invalid', 'true'); field.focus(); }
-            showToast('That address isn’t valid. Use a full address like https://example.com/mail');
+            rejectUrl('That address isn’t valid. Use a full address like https://example.com/mail');
             return;
           }
+
+          // A site app's window carries the site's icon, storage and permissions,
+          // so its address stays inside the area the app declares. Anything else
+          // is a Taskbar Tab of its own, not a different address for this one.
+          if (isSiteApp(app) && !inScope(app, parsed)) {
+            rejectUrl(
+              `<strong>${esc(parsed.host + parsed.pathname)}</strong> is outside this app’s area. `
+              + `${esc(app.name)} covers ${esc(scopeLabel(app))}. `
+              + 'To open a different page in its own window, add a Taskbar Tab.',
+              parsed.href);
+            return;
+          }
+
           const name = state.draft.name.trim();
           if (!name) {
             const field = $('#detailName', main);
@@ -2320,6 +2481,9 @@
           if (!app.pinned) { applyIdentity(app, name, parsed); break; }
 
           pendingSave = { appId: app.id, name, parsed };
+
+          $('#saveTitle').textContent = 'Save changes?';
+          $('#saveConfirm').textContent = 'Save changes';
 
           const saveText = $('#saveText');
           saveText.textContent = nameChanged ? `${app.name} will be renamed to ${name}.` : '';
@@ -2337,9 +2501,68 @@
         }
 
         case 'revert-identity':
-          state.draft = null;
+          state.draft = null; state.urlError = null;
           render();
           break;
+
+        case 'use-site-name':
+          state.draft.name = app.siteName;
+          render();
+          break;
+
+        case 'keep-old-name': {
+          // Writes a local override using the same mechanism as a manual rename,
+          // so declining a developer's rename introduces no new kind of state.
+          const keep = app.siteRename.from;
+          app.siteRenameDismissed = true;
+          app.name = keep;
+          state.draft = null; state.urlError = null;
+          render();
+          showToast(`This app will be called ${keep} on your device`);
+          break;
+        }
+
+        case 'dismiss-rename':
+          app.siteRenameDismissed = true;
+          render();
+          break;
+
+        case 'dismiss-offer':
+          app.offerDismissed = true;
+          render();
+          break;
+
+        case 'switch-to-app': {
+          const m = MANIFESTS[app.origin];
+          if (!m) break;
+          const parsed = new URL(m.start === '/' ? app.origin : app.origin + m.start);
+          const extra = { source: 'site', siteName: m.name, startPath: m.start, scope: m.scope };
+          const toast = `${app.name} now uses the app provided by ${hostOf(app)}`;
+          // The name stays as the person set it, becoming a local override if it
+          // differs from the manifest's. A local name is never overwritten.
+          if (!app.pinned) { applyIdentity(app, app.name, parsed, extra, toast); break; }
+
+          pendingSave = { appId: app.id, name: app.name, parsed, extra, toast };
+          $('#saveTitle').textContent = 'Switch to the app?';
+          $('#saveConfirm').textContent = 'Switch to the app';
+          $('#saveText').textContent =
+            `${app.name} will use the name, icon and start page provided by ${hostOf(app)}.`;
+          $('#saveText').hidden = false;
+          $('#saveUrlLabel').hidden = false;
+          $('#saveUrlLabel').textContent = `${app.name} will open the following URL:`;
+          $('#saveUrl').hidden = false;
+          $('#saveUrl').textContent = parsed.href;
+          $('#saveDialog').showModal();
+          break;
+        }
+
+        case 'add-out-of-scope': {
+          const url = state.urlError && state.urlError.offerUrl;
+          state.draft = null; state.urlError = null;
+          render();
+          openAddDialog(url || '');
+          break;
+        }
 
         case 'pin-taskbar':
           app.pinned = true;
@@ -2376,12 +2599,7 @@
           break;
 
         case 'add':
-          $('#addUrl').value = '';
-          $('#addName').value = '';
-          $('#addContainer').value = 'none';
-          $('#addPinned').checked = true;
-          $('#addUrlError').hidden = true;
-          $('#addDialog').showModal();
+          openAddDialog();
           break;
 
         case 'launch':
@@ -2395,7 +2613,7 @@
         case 'rename':
           state.detailId = id;
           state.view = 'detail';
-          state.draft = null;
+          state.draft = null; state.urlError = null;
           state.focusField = 'name';
           render();
           break;
@@ -2421,14 +2639,25 @@
     let pendingContainer = null;
     let pendingSave = null;
 
-    function applyIdentity(app, name, parsed) {
+    /* Rejects the address field in place: the message names the rule, and an
+       out-of-scope URL also carries the way out. */
+    function rejectUrl(message, offerUrl) {
+      state.urlError = { message, offerUrl };
+      render();
+      const field = $('#detailUrl', main);
+      if (field) field.focus();
+    }
+
+    function applyIdentity(app, name, parsed, extra, toast) {
       app.name = name;
-      app.letter = name.charAt(0).toUpperCase();
+      // A site app's icon comes from its manifest, so renaming never touches it.
+      if (!isSiteApp(app)) app.letter = name.charAt(0).toUpperCase();
       app.origin = parsed.origin;
       app.path = parsed.pathname + parsed.search;
-      state.draft = null;
+      if (extra) Object.assign(app, extra);
+      state.draft = null; state.urlError = null;
       render();
-      showToast(`Changes saved for ${app.name}`);
+      showToast(toast || `Changes saved for ${app.name}`);
     }
 
     document.getElementById('saveForm').addEventListener('submit', () => {
@@ -2436,7 +2665,7 @@
       pendingSave = null;
       if (!change) return;
       const app = appById(change.appId);
-      if (app) applyIdentity(app, change.name, change.parsed);
+      if (app) applyIdentity(app, change.name, change.parsed, change.extra, change.toast);
     });
 
     function openContainerDialog(app, to) {
@@ -2520,6 +2749,71 @@
       btn.addEventListener('click', () => btn.closest('dialog').close());
     });
 
+    /* ---- Add dialog ------------------------------------------------------ */
+
+    function openAddDialog(prefill = '') {
+      $('#addUrl').value = prefill;
+      $('#addUrl').removeAttribute('aria-invalid');
+      $('#addName').value = '';
+      delete $('#addName').dataset.touched;
+      $('#addContainer').value = 'none';
+      $('#addPinned').checked = true;
+      $('#addUrlError').hidden = true;
+      $('#addSourceSite').checked = true;
+      syncAddManifest();
+      $('#addDialog').showModal();
+    }
+
+    function manifestForInput(raw) {
+      try {
+        const url = new URL(/^https?:\/\//i.test(raw) ? raw : 'https://' + raw);
+        return MANIFESTS[url.origin] ? { manifest: MANIFESTS[url.origin], url } : null;
+      } catch { return null; }
+    }
+
+    function manifestStart(origin, manifest) {
+      return manifest.start === '/' ? origin : origin + manifest.start;
+    }
+
+    /* Reveals the app-or-shortcut choice once the address resolves to a site
+       that publishes a manifest, rather than deciding on the person's behalf. */
+    function syncAddManifest() {
+      const found = manifestForInput($('#addUrl').value.trim());
+      const nameField = $('#addName');
+      const asSite = Boolean(found) && $('#addSourceSite').checked;
+
+      $('#addSourceGroup').hidden = !found;
+      // Only ever fill in a name the person hasn't typed over.
+      if (!nameField.dataset.touched) nameField.value = asSite ? found.manifest.name : '';
+      // Choosing the app means the start page comes from the site, so the
+      // “opens at exactly this address” line would no longer be true.
+      $('#addUrlHelp').hidden = asSite;
+      if (!found) { $('#addStartNote').hidden = true; return; }
+
+      $('#addSiteName').textContent = found.manifest.name;
+      $('#addSiteHelp').textContent =
+        `Uses the name, icon and start page from ${found.url.host}.`;
+      $('#addStartNote').textContent =
+        `Opens at ${manifestStart(found.url.origin, found.manifest)}, the start page this app declares.`;
+      $('#addStartNote').hidden = !asSite;
+    }
+
+    function addUrlProblem(message) {
+      $('#addUrlError').textContent = message;
+      $('#addUrlError').hidden = false;
+      $('#addUrl').setAttribute('aria-invalid', 'true');
+      $('#addUrl').focus();
+    }
+
+    $('#addUrl').addEventListener('input', () => {
+      $('#addUrl').removeAttribute('aria-invalid');
+      $('#addUrlError').hidden = true;
+      syncAddManifest();
+    });
+    $('#addName').addEventListener('input', e => { e.target.dataset.touched = '1'; });
+    $('#addSourceSite').addEventListener('change', syncAddManifest);
+    $('#addSourceUser').addEventListener('change', syncAddManifest);
+
     $('#addForm').addEventListener('submit', e => {
       const raw = $('#addUrl').value.trim();
       let url;
@@ -2528,18 +2822,29 @@
         if (!/^https?:$/.test(url.protocol)) throw new Error('scheme');
       } catch {
         e.preventDefault();
-        $('#addUrlError').hidden = false;
-        $('#addUrl').setAttribute('aria-invalid', 'true');
-        $('#addUrl').focus();
+        addUrlProblem('Enter a web address that starts with https:// or http://');
         return;
       }
-      const name = $('#addName').value.trim() || url.host.replace(/^www\./, '');
+
+      const found = manifestForInput(raw);
+      const asSite = Boolean(found) && $('#addSourceSite').checked;
+      const path = asSite ? found.manifest.start : url.pathname + url.search;
+      const name = $('#addName').value.trim()
+        || (asSite ? found.manifest.name : url.host.replace(/^www\./, ''));
+
+      const duplicate = state.apps.find(a => a.origin === url.origin && a.path === path);
+      if (duplicate) {
+        e.preventDefault();
+        addUrlProblem(`${duplicate.name} already opens this address. Open it from the list, or choose a different page.`);
+        return;
+      }
+
       const palette = ['#0f6cbd', '#5b5fc7', '#1fa855', '#2684ff', '#c50042', '#7542e5', '#008787', '#e25b00'];
       const app = {
         id: nextId++,
         name,
         origin: url.origin,
-        path: url.pathname + url.search,
+        path,
         color: palette[state.apps.length % palette.length],
         letter: name.charAt(0).toUpperCase(),
         container: $('#addContainer').value,
@@ -2549,7 +2854,10 @@
         notifications: 'ask', camera: 'ask', microphone: 'ask', location: 'ask',
         storage: 0,
         lastUsed: 'Just now',
-        added: 'Today'
+        added: 'Today',
+        ...(asSite
+          ? { source: 'site', siteName: found.manifest.name, startPath: found.manifest.start, scope: found.manifest.scope }
+          : { source: 'user' })
       };
       state.apps.unshift(app);
       render();

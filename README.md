@@ -11,6 +11,7 @@ This is a design prototype for that missing settings page, which sits in Firefox
 | [mockup.html](mockup.html) | The interactive prototype. Open it in any browser (no build step, no dependencies). |
 | [taskbar-tabs-options-specification.md](taskbar-tabs-options-specification.md) | Every option, what each state does, and how it behaves at the edges. |
 | [taskbar-tabs-design-rationale.md](taskbar-tabs-design-rationale.md) | Why each decision was made the way it was. |
+| [taskbar-tabs-provenance-analysis.md](taskbar-tabs-provenance-analysis.md) | The long form of one decision: how the interface distinguishes an app the site declares from a shortcut you made, audited against Nielsen's ten heuristics. |
 
 ## The main page
 
@@ -29,6 +30,20 @@ Per-row actions live in an overflow menu: open it, rename it, copy its address, 
 Adding one asks for just an address, a name, and a container.
 
 ![The Add a Taskbar Tab dialog](docs/screenshots/add-dialog.png)
+
+## Apps the site declares, and shortcuts you made
+
+Two kinds of thing end up in this list. Most are shortcuts: you picked the address and the name. Some are apps the site declares in a manifest, where the name, icon, start page and scope belong to the developer, and where the name can change under you when the site is updated.
+
+They share one list, because someone looking for Teams should not have to know how Teams got there. The difference shows as a badge, **From the site** or **Added by you**, and it decides what you can edit: the name is always yours to change, with the site's name shown beneath it and a reset beside it, while the address is held to the area the app declares.
+
+![The Add dialog offering either the app a site provides or a plain shortcut](docs/screenshots/spec/5.1-add-app-choice.png)
+
+An address outside that area is refused with the rule and a way out, rather than a field that will not accept typing and never says why.
+
+![The address field refusing an out-of-scope address](docs/screenshots/spec/4.2-out-of-scope.png)
+
+The reasoning, and the audit against Nielsen's ten heuristics, is in [taskbar-tabs-provenance-analysis.md](taskbar-tabs-provenance-analysis.md).
 
 ## The per-app page
 
