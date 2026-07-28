@@ -1809,6 +1809,15 @@
       return app.startPath === '/' ? app.origin : app.origin + app.startPath;
     }
 
+    /* The reset button beside the address means “back to the start page” for a
+       site app and “back to the site’s home page” for one the user added. It
+       reads the draft rather than the saved address, so it tracks typing. */
+    function resetAddressDisabled(app, draftUrl) {
+      return isSiteApp(app)
+        ? draftUrl === startUrl(app)
+        : /^https?:\/\/[^/]+\/?$/.test(draftUrl);
+    }
+
     /* Copies of one app in different containers. Identity is the manifest plus the
        container, not the manifest alone. */
     function siblingCopies(app) {
@@ -2084,11 +2093,7 @@
       // Only one copy of an app can capture links, so a copy in another container
       // says which one holds them rather than silently competing.
       const capturedBy = siblingCopies(app).find(a => a.captureLinks) || (app.captureLinks ? app : null);
-      // The reset button beside the address means “back to the start page” for a
-      // site app and “back to the site’s home page” for one the user added.
-      const resetDisabled = site
-        ? draft.url === startUrl(app)
-        : /^https?:\/\/[^/]+\/?$/.test(draft.url);
+      const resetDisabled = resetAddressDisabled(app, draft.url);
 
       const permRow = (label, value, help) => `
     <div class="summary-row">
@@ -2180,10 +2185,6 @@
             </span>
           </span>
         </div>
-        ${site ? `
-          <p class="description">
-            Must stay within <strong>${esc(scopeLabel(app))}</strong>, the area this app covers.
-          </p>` : ''}
         ${state.urlError ? `
           <p class="description" id="detailUrlError" style="color: var(--text-color-error)">${state.urlError.message}</p>
           ${state.urlError.offerUrl ? `
@@ -2363,6 +2364,13 @@
         if (cancel) cancel.disabled = !dirty;
       };
 
+      // The address handler edits the field in place rather than re-rendering, so
+      // the reset button beside it has to be brought up to date by hand.
+      const syncResetAddress = () => {
+        const reset = main.querySelector('[data-action="use-home-page"]');
+        if (reset) reset.disabled = resetAddressDisabled(app, state.draft.url);
+      };
+
       const nameField = $('#detailName', main);
       nameField.addEventListener('input', e => {
         state.draft.name = e.target.value;
@@ -2389,6 +2397,7 @@
           if (recover) recover.parentElement.remove();
         }
         syncDirty();
+        syncResetAddress();
       });
 
       $('#detailLogin', main).addEventListener('change', e => {
