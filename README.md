@@ -12,6 +12,7 @@ This is a design prototype for that missing settings page, which sits in Firefox
 | [taskbar-tabs-options-specification.md](taskbar-tabs-options-specification.md) | Every option, what each state does, and how it behaves at the edges. |
 | [taskbar-tabs-design-rationale.md](taskbar-tabs-design-rationale.md) | Why each decision was made the way it was. |
 | [taskbar-tabs-provenance-analysis.md](taskbar-tabs-provenance-analysis.md) | The long form of one decision: how the interface distinguishes an app the site declares from a shortcut you made, audited against Nielsen's ten heuristics. |
+| [taskbar-tabs-security-analysis.md](taskbar-tabs-security-analysis.md) | What this design still has to answer, measured against what Chromium ships for installed web apps. |
 
 ## The main page
 
@@ -35,15 +36,19 @@ Adding one asks for just an address, a name, and a container.
 
 Two kinds of thing end up in this list. Most are shortcuts: you picked the address and the name. Some are apps the site declares in a manifest, where the name, icon, start page and scope belong to the developer, and where the name can change under you when the site is updated.
 
-They share one list, because someone looking for Teams should not have to know how Teams got there. The difference shows as a badge, **From the site** or **Added by you**, and it decides what you can edit: the name is always yours to change, with the site's name shown beneath it and a reset beside it, while the address is held to the area the app declares.
+A third kind exists on a managed device: apps installed by policy, which take their identity from a manifest the same way but are not yours to remove.
 
-![The Add dialog offering either the app a site provides or a plain shortcut](docs/screenshots/spec/5.1-add-app-choice.png)
+They share one list, because someone looking for Teams should not have to know how Teams got there. The difference shows as a badge, and it decides what you can edit: the name is always yours to change, with the site's name shown beneath it and a reset beside it, while the address is held to the area the app declares.
 
 An address outside that area is refused with the rule and a way out, rather than a field that will not accept typing and never says why.
 
 ![The address field refusing an out-of-scope address](docs/screenshots/spec/4.2-out-of-scope.png)
 
-The reasoning, and the audit against Nielsen's ten heuristics, is in [taskbar-tabs-provenance-analysis.md](taskbar-tabs-provenance-analysis.md).
+Because containers can run one site twice, an app can exist once per container, and the second copy has to be named. Two identical icons on the taskbar where one holds your work account is the thing this avoids.
+
+![The Add dialog asking for a distinct name for a second copy](docs/screenshots/spec/5.1-second-copy.png)
+
+The reasoning, and the audit against Nielsen's ten heuristics, is in [taskbar-tabs-provenance-analysis.md](taskbar-tabs-provenance-analysis.md). What the design still owed after that, measured against Chromium, is in [taskbar-tabs-security-analysis.md](taskbar-tabs-security-analysis.md).
 
 ## The per-app page
 

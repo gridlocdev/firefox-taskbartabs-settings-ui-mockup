@@ -602,42 +602,6 @@
       }
     }
 
-    /* Radio group */
-    .radio-group {
-      display: grid;
-      gap: var(--space-xxsmall);
-      border: 0;
-      margin: 0;
-      padding: 0;
-    }
-
-    .radio-group[hidden] {
-      display: none;
-    }
-
-    .radio-group legend {
-      font-size: var(--font-size-small);
-      font-weight: var(--font-weight-bold);
-      padding: 0 0 var(--space-xsmall);
-    }
-
-    .radio {
-      display: grid;
-      grid-template-columns: auto 1fr;
-      gap: var(--space-small);
-      align-items: start;
-      padding-block: var(--space-xsmall);
-      cursor: pointer;
-      font-size: var(--font-size-small);
-    }
-
-    .radio input {
-      margin: 3px 0 0;
-      accent-color: var(--color-accent-primary);
-      width: 16px;
-      height: 16px;
-    }
-
     /* Message bar */
     .message-bar {
       display: flex;
@@ -647,6 +611,12 @@
       border-radius: var(--border-radius-small);
       font-size: var(--font-size-small);
       margin-bottom: var(--space-large);
+    }
+
+    /* `display: flex` above beats the hidden attribute's UA rule, so every bar
+       toggled with .hidden needs this to actually disappear. */
+    .message-bar[hidden] {
+      display: none;
     }
 
     .message-bar.information {
@@ -1606,33 +1576,24 @@
         <input class="input" id="addUrl" type="text" placeholder="https://example.com/mail" required spellcheck="false"
           autocapitalize="off">
         <p class="description" id="addUrlHelp">The app opens at exactly this address. You can change it later.</p>
-        <p class="description" id="addStartNote" hidden></p>
         <p class="description" id="addUrlError" hidden style="color: var(--text-color-error)">Enter a web address that
           starts with https:// or http://</p>
       </div>
 
-      <!-- Shown only when the address resolves to a site that publishes a
-           manifest, so the choice is offered rather than made silently. -->
-      <fieldset class="radio-group" id="addSourceGroup" hidden style="margin-bottom: var(--space-large)">
-        <legend>How should this be added?</legend>
-        <label class="radio">
-          <input type="radio" name="addSource" id="addSourceSite" value="site" checked>
-          <span>Add <strong id="addSiteName">the app</strong>, the app this site provides
-            <p class="description" id="addSiteHelp">Uses the name, icon and start page from the site.</p>
-          </span>
-        </label>
-        <label class="radio">
-          <input type="radio" name="addSource" id="addSourceUser" value="user">
-          <span>Add a shortcut to this page
-            <p class="description">You choose the name and the exact address.</p>
-          </span>
-        </label>
-      </fieldset>
+      <!-- Shown when this address already exists in another container, since two
+           copies with one name are indistinguishable on the taskbar. -->
+      <div class="message-bar information" id="addCopyNote" hidden>
+        <svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor">
+          <path d="M8 1.5a6.5 6.5 0 1 0 0 13 6.5 6.5 0 0 0 0-13ZM7 4.5h2v2H7v-2Zm0 3h2v4H7v-4Z" />
+        </svg>
+        <div class="grow" id="addCopyText"></div>
+      </div>
 
       <div class="field">
         <label for="addName">Name</label>
         <input class="input" id="addName" type="text" placeholder="Example">
         <p class="description">Shown in the taskbar and in the Start menu.</p>
+        <p class="description" id="addNameError" hidden style="color: var(--text-color-error)"></p>
       </div>
       <div class="field">
         <label for="addContainer">Container</label>
@@ -1660,7 +1621,7 @@
         <p class="description" id="saveUrlLabel" hidden></p>
         <p class="emphasis" id="saveUrl" hidden></p>
       </div>
-      <div class="message-bar information">
+      <div class="message-bar information" id="savePinNote">
         <svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor">
           <path d="M8 1.5a6.5 6.5 0 1 0 0 13 6.5 6.5 0 0 0 0-13ZM7 4.5h2v2H7v-2Zm0 3h2v4H7v-4Z" />
         </svg>
@@ -1773,13 +1734,17 @@
       lastRemoved: null,
       urlError: null,                // { message, offerUrl } while the address field is rejected
       /* `source` is where the app's identity comes from:
-           'site': declared in the site's manifest. siteName, startPath and scope
-                   belong to the developer; `name` may hold a local override.
-           'user': the person typed an address and chose a name. */
+           'site':      declared in the site's manifest. siteName, startPath and
+                        scope belong to the developer; `name` may hold a local
+                        override.
+           'user':      the person typed an address and chose a name.
+           'enterprise': force-installed by policy. Identity comes from the
+                        manifest as for 'site', but removal is not the person's
+                        to make. */
       apps: [
         { id: 1, name: 'Microsoft Outlook', origin: 'https://outlook.office.com', path: '/mail/', color: '#0f6cbd', letter: 'O', container: 'work', pinned: true, openAtLogin: true, captureLinks: true, notifications: 'allow', camera: 'ask', microphone: 'ask', location: 'block', storage: 184, lastUsed: 'Today at 09:12', added: '12 Mar 2026', source: 'site', siteName: 'Microsoft Outlook', startPath: '/mail/', scope: '/mail/', siteRename: { from: 'Outlook', on: '2026-07-12' } },
-        { id: 2, name: 'Teams', origin: 'https://teams.microsoft.com', path: '/v2/', color: '#5b5fc7', letter: 'T', container: 'work', pinned: true, openAtLogin: true, captureLinks: true, notifications: 'allow', camera: 'allow', microphone: 'allow', location: 'block', storage: 402, lastUsed: 'Today at 08:40', added: '12 Mar 2026', source: 'site', siteName: 'Microsoft Teams', startPath: '/v2/', scope: '/v2/' },
-        { id: 3, name: 'WhatsApp Web', origin: 'https://web.whatsapp.com', path: '/', color: '#1fa855', letter: 'W', container: 'personal', pinned: true, openAtLogin: false, captureLinks: false, notifications: 'allow', camera: 'ask', microphone: 'allow', location: 'block', storage: 96, lastUsed: 'Yesterday at 21:04', added: '02 Feb 2026', source: 'site', siteName: 'WhatsApp Web', startPath: '/', scope: '/' },
+        { id: 2, name: 'Microsoft Teams', origin: 'https://teams.microsoft.com', path: '/v2/', color: '#5b5fc7', letter: 'T', container: 'work', pinned: true, openAtLogin: true, captureLinks: true, notifications: 'allow', camera: 'allow', microphone: 'allow', location: 'block', storage: 402, lastUsed: 'Today at 08:40', added: '12 Mar 2026', source: 'enterprise', managedBy: 'your organisation', siteName: 'Microsoft Teams', startPath: '/v2/', scope: '/v2/' },
+        { id: 3, name: 'WhatsApp Web', origin: 'https://web.whatsapp.com', path: '/', color: '#1fa855', letter: 'W', container: 'personal', pinned: true, openAtLogin: false, captureLinks: false, notifications: 'allow', camera: 'ask', microphone: 'allow', location: 'block', storage: 96, lastUsed: 'Yesterday at 21:04', added: '02 Feb 2026', source: 'site', siteName: 'WhatsApp', startPath: '/', scope: '/' },
         { id: 4, name: 'Jira', origin: 'https://mozilla.atlassian.net', path: '/jira/software/projects', color: '#2684ff', letter: 'J', container: 'work', pinned: false, openAtLogin: false, captureLinks: true, notifications: 'block', camera: 'block', microphone: 'block', location: 'block', storage: 41, lastUsed: '3 days ago', added: '28 Jan 2026', source: 'user' },
         { id: 5, name: 'Photopea', origin: 'https://www.photopea.com', path: '/', color: '#1a6fb4', letter: 'P', container: 'none', pinned: true, openAtLogin: false, captureLinks: false, notifications: 'block', camera: 'block', microphone: 'block', location: 'block', storage: 12, lastUsed: '1 week ago', added: '19 Dec 2025', source: 'user' },
         { id: 6, name: 'Home Assistant', origin: 'http://homeassistant.local:8123', path: '/lovelace/0', color: '#18bcf2', letter: 'H', container: 'personal', pinned: true, openAtLogin: true, captureLinks: false, notifications: 'allow', camera: 'ask', microphone: 'ask', location: 'allow', storage: 8, lastUsed: 'Today at 07:55', added: '05 Nov 2025', source: 'user' }
@@ -1814,21 +1779,41 @@
 
     /* ---- Provenance ------------------------------------------------------ */
 
-    function isSiteApp(app) { return app.source === 'site'; }
+    /* Both take their identity from a manifest. They differ only in who decides
+       whether the app may be removed. */
+    function isSiteApp(app) { return app.source === 'site' || app.source === 'enterprise'; }
 
-    /* True when the person has given a site-declared app their own name. */
+    function isManaged(app) { return app.source === 'enterprise'; }
+
+    /* True when the person has given a site-declared app their own name. A managed
+       app can still be renamed; only its removal is out of their hands. */
     function hasLocalName(app) { return isSiteApp(app) && app.name !== app.siteName; }
 
-    /* The area a site app covers, written the way it appears in the address bar
-       so it can be compared against what was typed. */
+    /* The area an app covers, as a list of matchers. There is one entry today; a
+       manifest declaring scope_extensions would add more, which is why the check
+       below iterates rather than comparing a single origin. */
+    function appAreas(app) {
+      return [{ origin: app.origin, prefix: app.scope }].concat(app.scopeExtensions || []);
+    }
+
+    function inScope(app, parsed) {
+      return appAreas(app).some(area =>
+        parsed.origin === area.origin && parsed.pathname.startsWith(area.prefix));
+    }
+
+    /* The area written the way it appears in the address bar, so it can be
+       compared against what was typed. */
     function scopeLabel(app) { return hostOf(app) + app.scope; }
 
     function startUrl(app) {
       return app.startPath === '/' ? app.origin : app.origin + app.startPath;
     }
 
-    function inScope(app, parsed) {
-      return parsed.origin === app.origin && parsed.pathname.startsWith(app.scope);
+    /* Copies of one app in different containers. Identity is the manifest plus the
+       container, not the manifest alone. */
+    function siblingCopies(app) {
+      return state.apps.filter(a =>
+        a.id !== app.id && a.origin === app.origin && a.path === app.path);
     }
 
     /* “July 12” for a rename this year, “July 12, 2025” for one before it, since
@@ -1840,9 +1825,16 @@
       return d.toLocaleDateString('en-US', opts);
     }
 
+    /* A manifest is only worth trusting over an authenticated transport, so an
+       app's identity is never taken from a plain-http origin. A shortcut to one is
+       still fine; its window is what carries the insecure indicator. */
+    function manifestFor(origin) {
+      return /^https:\/\//i.test(origin) ? MANIFESTS[origin] : undefined;
+    }
+
     /* A manually added shortcut whose site turns out to publish an app. */
     function offeredManifest(app) {
-      return app.source === 'user' && !app.offerDismissed ? MANIFESTS[app.origin] : null;
+      return app.source === 'user' && !app.offerDismissed ? manifestFor(app.origin) : null;
     }
 
     function visibleApps() {
@@ -2002,9 +1994,9 @@
       const selected = state.selection.has(app.id);
       return `
     <div class="box-item ${selected ? 'is-selected' : ''}" role="listitem">
-      <label class="checkbox" style="padding: 0">
-        <input type="checkbox" data-select="${app.id}" data-fk="select-${app.id}" ${selected ? 'checked' : ''}
-               aria-label="Select ${esc(app.name)}">
+      <label class="checkbox" style="padding: 0${isManaged(app) ? '; visibility: hidden' : ''}">
+        <input type="checkbox" ${isManaged(app) ? 'disabled' : `data-select="${app.id}" data-fk="select-${app.id}"`}
+               ${selected ? 'checked' : ''} aria-label="Select ${esc(app.name)}">
         <span></span>
       </label>
 
@@ -2018,9 +2010,11 @@
           <span>${esc(app.lastUsed)}</span>
         </div>
         <div class="app-badges">
-          ${isSiteApp(app)
-          ? '<span class="badge">From the site</span>'
-          : '<span class="badge">Added by you</span>'}
+          ${isManaged(app)
+          ? `<span class="badge">Installed by ${esc(app.managedBy)}</span>`
+          : isSiteApp(app)
+            ? '<span class="badge">From the site</span>'
+            : '<span class="badge">Added by you</span>'}
           ${app.pinned
           ? '<span class="badge accent">Pinned to taskbar</span>'
           : '<span class="badge">Not pinned</span>'}
@@ -2045,7 +2039,7 @@
             <button role="menuitem" data-open-detail="${app.id}">App settings…</button>
             <hr>
             <button role="menuitem" data-action="clear-data" data-id="${app.id}">Clear cookies and site data…</button>
-            <button role="menuitem" class="destructive" data-action="remove" data-id="${app.id}">Remove Taskbar Tab…</button>
+            ${isManaged(app) ? '' : `<button role="menuitem" class="destructive" data-action="remove" data-id="${app.id}">Remove Taskbar Tab…</button>`}
           </div>
         </div>
       </div>
@@ -2087,6 +2081,9 @@
       const site = isSiteApp(app);
       const offer = offeredManifest(app);
       const localName = hasLocalName(app);
+      // Only one copy of an app can capture links, so a copy in another container
+      // says which one holds them rather than silently competing.
+      const capturedBy = siblingCopies(app).find(a => a.captureLinks) || (app.captureLinks ? app : null);
       // The reset button beside the address means “back to the start page” for a
       // site app and “back to the site’s home page” for one the user added.
       const resetDisabled = site
@@ -2115,7 +2112,9 @@
         ${site ? `
           <p class="description" style="margin-top: var(--space-xxsmall)">
             This app is provided by ${esc(hostOf(app))}, which sets its name, icon and start page.
-            You can rename it here for yourself.
+            You can rename it here for yourself.${isManaged(app)
+            ? ' ' + esc(app.managedBy.charAt(0).toUpperCase() + app.managedBy.slice(1)) + ' installed it and manages whether it can be removed.'
+            : ''}
           </p>` : ''}
       </div>
       <button class="button primary" data-action="launch" data-id="${app.id}">${I.open} Open</button>
@@ -2211,12 +2210,16 @@
 
       <div class="toggle-row">
         <div>
-          <label for="detailCapture" style="font-weight: var(--font-weight-bold); font-size: var(--font-size-small)">Open links to this site here</label>
+          <label for="detailCapture" style="font-weight: var(--font-weight-bold); font-size: var(--font-size-small)">Open links to this app here</label>
           <p class="description">
-            ${state.captureLinksGlobally
-          ? 'Links to ' + esc(hostOf(app)) + ' that you open in Firefox come to this window instead of a new tab.'
-          : 'Turn on “Open links in their Taskbar Tab” in Taskbar Tabs settings to use this.'}
+            ${!state.captureLinksGlobally
+          ? 'Turn on “Open links in their Taskbar Tab” in Taskbar Tabs settings to use this.'
+          : site
+            ? 'Links to ' + esc(scopeLabel(app)) + ', the area this app covers, come to this window instead of a new tab.'
+            : 'Links to ' + esc(hostOf(app)) + ' come to this window instead of a new tab. A shortcut has no declared area, so this covers the whole site.'}
           </p>
+          ${capturedBy && capturedBy.id !== app.id ? `
+            <p class="description">${esc(capturedBy.name)} in ${esc(CONTAINERS[capturedBy.container].label.toLowerCase())} opens these links today. Turning this on moves them here.</p>` : ''}
         </div>
         <input class="switch" type="checkbox" id="detailCapture" role="switch"
                ${app.captureLinks ? 'checked' : ''} ${state.captureLinksGlobally ? '' : 'disabled'}>
@@ -2272,9 +2275,12 @@
       <div class="storage-row">
         <div>
           <strong style="font-size: var(--font-size-small)">Remove this Taskbar Tab</strong>
-          <p class="description">Deletes the shortcut Firefox created. ${esc(hostOf(app))} stays available as a normal tab.</p>
+          <p class="description">${isManaged(app)
+        ? esc(app.managedBy.charAt(0).toUpperCase() + app.managedBy.slice(1)) + ' installed ' + esc(app.name)
+        + ' and manages whether it can be removed.'
+        : 'Deletes the shortcut Firefox created. ' + esc(hostOf(app)) + ' stays available as a normal tab.'}</p>
         </div>
-        <button class="button destructive" data-action="remove" data-id="${app.id}">Remove Taskbar Tab…</button>
+        ${isManaged(app) ? '' : `<button class="button destructive" data-action="remove" data-id="${app.id}">Remove Taskbar Tab…</button>`}
       </div>
     </section>
   `;
@@ -2393,7 +2399,21 @@
       });
 
       const capture = $('#detailCapture', main);
-      if (capture) capture.addEventListener('change', e => { app.captureLinks = e.target.checked; });
+      if (capture) capture.addEventListener('change', e => {
+        app.captureLinks = e.target.checked;
+        // Exclusive across copies: a link has one destination, so claiming it here
+        // releases it everywhere else.
+        if (app.captureLinks) {
+          const moved = siblingCopies(app).filter(a => a.captureLinks);
+          moved.forEach(a => { a.captureLinks = false; });
+          if (moved.length) {
+            render();
+            showToast(`Links to ${hostOf(app)} now open in ${app.name}, not ${moved[0].name}`);
+            return;
+          }
+        }
+        render();
+      });
 
       $('#detailContainer', main).addEventListener('change', e => {
         openContainerDialog(app, e.target.value);
@@ -2484,6 +2504,7 @@
 
           $('#saveTitle').textContent = 'Save changes?';
           $('#saveConfirm').textContent = 'Save changes';
+          $('#savePinNote').hidden = false;
 
           const saveText = $('#saveText');
           saveText.textContent = nameChanged ? `${app.name} will be renamed to ${name}.` : '';
@@ -2533,16 +2554,16 @@
           break;
 
         case 'switch-to-app': {
-          const m = MANIFESTS[app.origin];
+          const m = manifestFor(app.origin);
           if (!m) break;
           const parsed = new URL(m.start === '/' ? app.origin : app.origin + m.start);
-          const extra = { source: 'site', siteName: m.name, startPath: m.start, scope: m.scope };
-          const toast = `${app.name} now uses the app provided by ${hostOf(app)}`;
-          // The name stays as the person set it, becoming a local override if it
-          // differs from the manifest's. A local name is never overwritten.
-          if (!app.pinned) { applyIdentity(app, app.name, parsed, extra, toast); break; }
-
-          pendingSave = { appId: app.id, name: app.name, parsed, extra, toast };
+          // Always confirms. Losing a pin is the lesser consequence; changing what
+          // the app opens is the greater one, and it stands on its own.
+          pendingSave = {
+            appId: app.id, name: app.name, parsed,
+            extra: { source: 'site', siteName: m.name, startPath: m.start, scope: m.scope },
+            toast: `${app.name} now uses the app provided by ${hostOf(app)}`
+          };
           $('#saveTitle').textContent = 'Switch to the app?';
           $('#saveConfirm').textContent = 'Switch to the app';
           $('#saveText').textContent =
@@ -2552,6 +2573,7 @@
           $('#saveUrlLabel').textContent = `${app.name} will open the following URL:`;
           $('#saveUrl').hidden = false;
           $('#saveUrl').textContent = parsed.href;
+          $('#savePinNote').hidden = !app.pinned;
           $('#saveDialog').showModal();
           break;
         }
@@ -2576,7 +2598,9 @@
 
 
         case 'select-all': {
-          const all = visibleApps();
+          // Removal is the only bulk action, so apps that cannot be removed are
+          // never part of a selection.
+          const all = visibleApps().filter(a => !isManaged(a));
           const allSelected = all.every(a => state.selection.has(a.id));
           allSelected ? state.selection.clear() : all.forEach(a => state.selection.add(a.id));
           render();
@@ -2751,91 +2775,111 @@
 
     /* ---- Add dialog ------------------------------------------------------ */
 
+    /* This dialog makes shortcuts only. Installing the app a site provides happens
+       from the address bar, where the page and its manifest are already loaded, so
+       nothing here ever fetches an address the person has merely typed. A shortcut
+       to a site that turns out to provide an app is offered the switch on its own
+       settings page (§4.11). */
     function openAddDialog(prefill = '') {
       $('#addUrl').value = prefill;
       $('#addUrl').removeAttribute('aria-invalid');
       $('#addName').value = '';
-      delete $('#addName').dataset.touched;
+      $('#addName').removeAttribute('aria-invalid');
+      delete $('#addName').dataset.auto;
       $('#addContainer').value = 'none';
       $('#addPinned').checked = true;
       $('#addUrlError').hidden = true;
-      $('#addSourceSite').checked = true;
-      syncAddManifest();
+      $('#addNameError').hidden = true;
+      syncAddCopy();
       $('#addDialog').showModal();
     }
 
-    function manifestForInput(raw) {
+    function parseAddUrl() {
       try {
-        const url = new URL(/^https?:\/\//i.test(raw) ? raw : 'https://' + raw);
-        return MANIFESTS[url.origin] ? { manifest: MANIFESTS[url.origin], url } : null;
+        const url = new URL($('#addUrl').value.trim());
+        return /^https?:$/.test(url.protocol) ? url : null;
       } catch { return null; }
     }
 
-    function manifestStart(origin, manifest) {
-      return manifest.start === '/' ? origin : origin + manifest.start;
+    /* An existing entry for the same address in a different container. */
+    function existingCopy(url, container) {
+      const path = url.pathname + url.search;
+      return state.apps.find(a => a.origin === url.origin && a.path === path && a.container !== container);
     }
 
-    /* Reveals the app-or-shortcut choice once the address resolves to a site
-       that publishes a manifest, rather than deciding on the person's behalf. */
-    function syncAddManifest() {
-      const found = manifestForInput($('#addUrl').value.trim());
+    function sameContainerDuplicate(url, container) {
+      const path = url.pathname + url.search;
+      return state.apps.find(a => a.origin === url.origin && a.path === path && a.container === container);
+    }
+
+    /* Two copies of one address share a name and an icon, and the taskbar shows
+       neither the container nor the list. So the second copy has to be named. */
+    function syncAddCopy() {
+      const url = parseAddUrl();
+      const container = $('#addContainer').value;
+      const copy = url && existingCopy(url, container);
       const nameField = $('#addName');
-      const asSite = Boolean(found) && $('#addSourceSite').checked;
 
-      $('#addSourceGroup').hidden = !found;
-      // Only ever fill in a name the person hasn't typed over.
-      if (!nameField.dataset.touched) nameField.value = asSite ? found.manifest.name : '';
-      // Choosing the app means the start page comes from the site, so the
-      // “opens at exactly this address” line would no longer be true.
-      $('#addUrlHelp').hidden = asSite;
-      if (!found) { $('#addStartNote').hidden = true; return; }
+      $('#addCopyNote').hidden = !copy;
+      if (!copy) {
+        // Drop a suggestion that no longer applies, but never a typed name.
+        if (nameField.dataset.auto) { nameField.value = ''; delete nameField.dataset.auto; }
+        return;
+      }
 
-      $('#addSiteName').textContent = found.manifest.name;
-      $('#addSiteHelp').textContent =
-        `Uses the name, icon and start page from ${found.url.host}.`;
-      $('#addStartNote').textContent =
-        `Opens at ${manifestStart(found.url.origin, found.manifest)}, the start page this app declares.`;
-      $('#addStartNote').hidden = !asSite;
+      const where = CONTAINERS[copy.container].color
+        ? 'in ' + CONTAINERS[copy.container].label.toLowerCase()
+        : 'with no container';
+      $('#addCopyText').textContent =
+        `You already have ${copy.name} ${where}. `
+        + 'Give this one its own name so you can tell them apart on the taskbar.';
+
+      if (nameField.value.trim() && !nameField.dataset.auto) return;
+      const label = CONTAINERS[container].color ? CONTAINERS[container].label : null;
+      nameField.value = label ? `${copy.name} (${label})` : `${copy.name} (2)`;
+      nameField.dataset.auto = '1';
     }
 
-    function addUrlProblem(message) {
-      $('#addUrlError').textContent = message;
-      $('#addUrlError').hidden = false;
-      $('#addUrl').setAttribute('aria-invalid', 'true');
-      $('#addUrl').focus();
+    function addProblem(field, message) {
+      $(field + 'Error').textContent = message;
+      $(field + 'Error').hidden = false;
+      $(field).setAttribute('aria-invalid', 'true');
+      $(field).focus();
     }
 
     $('#addUrl').addEventListener('input', () => {
       $('#addUrl').removeAttribute('aria-invalid');
       $('#addUrlError').hidden = true;
-      syncAddManifest();
+      syncAddCopy();
     });
-    $('#addName').addEventListener('input', e => { e.target.dataset.touched = '1'; });
-    $('#addSourceSite').addEventListener('change', syncAddManifest);
-    $('#addSourceUser').addEventListener('change', syncAddManifest);
+    $('#addContainer').addEventListener('change', syncAddCopy);
+    $('#addName').addEventListener('input', e => {
+      e.target.removeAttribute('aria-invalid');
+      delete e.target.dataset.auto;
+      $('#addNameError').hidden = true;
+    });
 
     $('#addForm').addEventListener('submit', e => {
-      const raw = $('#addUrl').value.trim();
-      let url;
-      try {
-        url = new URL(raw);
-        if (!/^https?:$/.test(url.protocol)) throw new Error('scheme');
-      } catch {
+      const url = parseAddUrl();
+      if (!url) {
         e.preventDefault();
-        addUrlProblem('Enter a web address that starts with https:// or http://');
+        addProblem('#addUrl', 'Enter a web address that starts with https:// or http://');
         return;
       }
 
-      const found = manifestForInput(raw);
-      const asSite = Boolean(found) && $('#addSourceSite').checked;
-      const path = asSite ? found.manifest.start : url.pathname + url.search;
-      const name = $('#addName').value.trim()
-        || (asSite ? found.manifest.name : url.host.replace(/^www\./, ''));
-
-      const duplicate = state.apps.find(a => a.origin === url.origin && a.path === path);
+      const container = $('#addContainer').value;
+      const duplicate = sameContainerDuplicate(url, container);
       if (duplicate) {
         e.preventDefault();
-        addUrlProblem(`${duplicate.name} already opens this address. Open it from the list, or choose a different page.`);
+        addProblem('#addUrl', `${duplicate.name} already opens this address in the same container. Open it from the list, or choose a different page.`);
+        return;
+      }
+
+      const name = $('#addName').value.trim() || url.host.replace(/^www\./, '');
+      const copy = existingCopy(url, container);
+      if (copy && name.toLowerCase() === copy.name.toLowerCase()) {
+        e.preventDefault();
+        addProblem('#addName', `${copy.name} is already the name of this app in ${CONTAINERS[copy.container].label.toLowerCase()}. Give this one a different name.`);
         return;
       }
 
@@ -2844,20 +2888,19 @@
         id: nextId++,
         name,
         origin: url.origin,
-        path,
+        path: url.pathname + url.search,
         color: palette[state.apps.length % palette.length],
         letter: name.charAt(0).toUpperCase(),
-        container: $('#addContainer').value,
+        container,
         pinned: $('#addPinned').checked,
         openAtLogin: false,
-        captureLinks: state.captureLinksGlobally,
+        // Only one copy captures links, so a second copy starts without them.
+        captureLinks: state.captureLinksGlobally && !copy,
         notifications: 'ask', camera: 'ask', microphone: 'ask', location: 'ask',
         storage: 0,
         lastUsed: 'Just now',
         added: 'Today',
-        ...(asSite
-          ? { source: 'site', siteName: found.manifest.name, startPath: found.manifest.start, scope: found.manifest.scope }
-          : { source: 'user' })
+        source: 'user'
       };
       state.apps.unshift(app);
       render();

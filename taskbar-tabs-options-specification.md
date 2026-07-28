@@ -23,6 +23,8 @@ Three checkboxes in the Settings card. All apply to Firefox as a whole, for the 
 | **On** | The "Add to taskbar" icon appears at the right of the address bar on every eligible page. Clicking it adds the current tab as a Taskbar Tab. On a site that provides an app (§9) the button reads **Install {name}** instead. |
 | **Off** | The icon is hidden. Taskbar Tabs can still be added from the tab context menu and from the **Add Taskbar Tab…** button on this page. |
 
+**This is the only place an app can be installed from.** The **Add Taskbar Tab…** button makes shortcuts and never installs, because installing requires the manifest and this is the one entry point where the page is already loaded (§5.1). Turning the button off therefore removes the install path, leaving §4.11 as the way to reach it: add a shortcut, then switch.
+
 ![The address bar button checkbox, turned on](docs/screenshots/spec/1.1-show-urlbar-button.png)
 
 Turning this off never removes existing Taskbar Tabs, and never blocks adding new ones, since it only hides one entry point.
@@ -194,6 +196,7 @@ There is deliberately **no unpin option**. See §6.
 |---|---|
 | **From the site** | The app's name, icon and start page come from the site (§9). |
 | **Added by you** | The address and name were chosen by the person, not the site. |
+| **Installed by {authority}** | Force-installed by policy. Identity comes from the manifest as above, but removal does not (§4.10). |
 | **Pinned to taskbar** | The icon is currently on the taskbar. |
 | **Not pinned** | The tab exists but has no taskbar icon. |
 | *Container name* + colour dot | The container the tab runs in. Absent when no container is set. |
@@ -360,21 +363,30 @@ Independent of §1.3, which governs Firefox restarts rather than device sign-in.
 
 ---
 
-### 4.7 Open links to this site here
+### 4.7 Open links to this app here
 
 | | |
 |---|---|
 | **Control** | Toggle |
-| **Default** | Inherits §1.2 at the time the tab was added |
+| **Default** | Inherits §1.2 at the time the tab was added, except for a second copy in another container, which starts off |
 | **Disabled when** | §1.2 is off |
 
 | State | Behaviour |
 |---|---|
-| **On** | Links to this tab's host that you open in Firefox come to this window instead of a new tab. |
+| **On** | Links falling inside this app's area, opened in Firefox, come to this window instead of a new tab. |
 | **Off** | Those links open as ordinary tabs. |
 | **Disabled** | Shows *"Turn on 'Open links in their Taskbar Tab' in Taskbar Tabs settings to use this."* The stored value is kept. |
 
-Matching is by host, so it covers the whole site, not just the configured address.
+**What counts as the app's area** depends on where the tab came from (§9):
+
+| Kind | Area matched | Why |
+|---|---|---|
+| **From the site** | The declared scope, e.g. `outlook.office.com/mail/` | The site said what it covers, so nothing wider is claimed |
+| **Added by you** | The whole host | A shortcut declares nothing, so the host is the only rule available |
+
+Host matching is the coarser of the two, and on a shared host it captures other people's pages. The description says so: *"A shortcut has no declared area, so this covers the whole site."*
+
+**Only one copy can capture.** Two copies of one app in different containers would otherwise both claim the same link and a link has one destination. Turning this on releases it from any sibling copy, and the description names the copy that holds it: *"Microsoft Outlook in work opens these links today. Turning this on moves them here."* A toast confirms the move.
 
 ![The Open links to this site here toggle](docs/screenshots/spec/4.7-open-links-here.png)
 
@@ -411,10 +423,15 @@ Shows the amount stored for the host in this tab's container, and notes that tab
 | | |
 |---|---|
 | **Control** | Button in Data and removal |
+| **Absent when** | The tab was installed by policy (§9) |
 
 Opens the remove confirmation (§5.4).
 
 Wording is the same for both kinds. What is removed is the Taskbar Tab: the site is not uninstalled, and it stays available in a normal tab, which is what the dialog already says.
+
+**For a managed tab the button is absent rather than disabled**, and the row says who decides instead: *"Your organisation installed Microsoft Teams and manages whether it can be removed."* A disabled button with no explanation is the dead end §4.2 argues against; naming the authority answers the question the button would have raised. The same tab is also left out of selection entirely (§2.3), since removal is the only bulk action.
+
+Removal deletes the shortcut and nothing else today. If Firefox ever registers file or protocol handlers from a manifest (§9), this section and §5.4 have to enumerate what else goes, because the current wording would then be false.
 
 ![The Remove this Taskbar Tab row](docs/screenshots/spec/4.10-remove.png)
 
@@ -473,22 +490,31 @@ Opened by **Add Taskbar Tab…**.
 | **Container** | No container | Set once, here. |
 | **Pin to taskbar** | Checked | Asks Windows to add the icon. |
 
-**When the address resolves to a site that provides an app**, a choice appears between the Address and Name fields rather than the browser deciding silently:
+**This dialog makes shortcuts only.** It never produces an app whose identity came from a manifest, and it never fetches the address that was typed.
 
-| Option | Effect |
+The reason is the entry point. Installing from here would mean the Settings page issuing a request to an arbitrary, possibly pasted address before the person had committed to anything, which is a request they did not ask for to a server they may not know. Installing therefore happens from the address bar (§1.1), where the page and its manifest are already loaded because they chose to visit. A shortcut that turns out to point at a site providing an app is offered the switch on its own settings page (§4.11), which needs no speculative fetch either.
+
+Each entry point does one thing, and neither has to guess.
+
+**Duplicates** are caught on submit, and depend on the container, because two containers running one site is what containers are for:
+
+| Case | Result |
 |---|---|
-| **Add {name}, the app this site provides** (default) | Name is prefilled from the site and stays editable; the address becomes the app's start page, and the field description says so |
-| **Add a shortcut to this page** | Name and address are both the person's, exactly as before |
+| **Same address, same container** | Refused. *"{name} already opens this address in the same container. Open it from the list, or choose a different page."* |
+| **Same address, different container** | Allowed, and the dialog says so before submission, since two copies share a name and an icon and the taskbar shows neither the container nor this list |
+| **Same address, different container, same name** | Refused on the Name field. *"{name} is already the name of this app in {container}. Give this one a different name."* |
 
-**Duplicates** are caught on submit. If a Taskbar Tab already opens the resulting address, the field is marked invalid and shows *"{name} already opens this address. Open it from the list, or choose a different page."*
+For the allowed case an information bar appears: *"You already have Microsoft Outlook in work. Give this one its own name so you can tell them apart on the taskbar."* The Name field is prefilled with a suggestion, `Microsoft Outlook (Personal)`, or `Microsoft Outlook (2)` when the new copy has no container. The suggestion follows the container as it changes and is dropped if the address stops matching, but a name that was typed is never replaced.
+
+A second copy also starts with link capture off (§4.7), since only one copy can hold it.
 
 On success the tab is added to the top of the list and a toast confirms, offering **Open**.
 
 ![The Add a Taskbar Tab dialog](docs/screenshots/spec/5.1-add-dialog.png)
 
-![The Add dialog offering the app or a shortcut](docs/screenshots/spec/5.1-add-app-choice.png)
+![The Add dialog asking for a distinct name for a second copy](docs/screenshots/spec/5.1-second-copy.png)
 
-*Shown for a site that provides an app. Choosing the app replaces the "opens at exactly this address" line, since the start page is the site's to set.*
+*A second copy of an app that already exists in another container.*
 
 ---
 
@@ -622,15 +648,39 @@ Toasts appear at the bottom of the window, dismiss automatically after about eig
 
 ## 9. Where each value comes from
 
-Two kinds of entry share the list. One was typed in by hand; the other was declared by the site in a manifest, where the name, icon, start page and area belong to the developer.
+Three kinds of entry share the list. One was typed in by hand; one was declared by the site in a manifest, where the name, icon, start page and area belong to the developer; one was installed by policy and takes its identity from a manifest the same way, but is not the person's to remove.
 
-| | Added by you | From the site |
-|---|---|---|
-| **Name** | Yours | The site's, replaceable with a local one (§4.1) |
-| **Address it opens** | Any valid `http(s)` URL | The declared start page, editable within the app's area (§4.2) |
-| **Area it covers** | Inferred: the host of the address | Declared by the site |
-| **Icon** | Favicon | From the site |
-| **Can change on its own** | No | Yes: the name, when the site is updated (§4.12) |
+| | Added by you | From the site | Installed by policy |
+|---|---|---|---|
+| **Name** | Yours | The site's, replaceable with a local one (§4.1) | Same as From the site |
+| **Address it opens** | Any valid `http(s)` URL | The declared start page, editable within the app's area (§4.2) | Same |
+| **Area it covers** | Inferred: the host of the address | Declared by the site | Same |
+| **Icon** | Favicon | From the site | Same |
+| **Can change on its own** | No | Yes: the name, when the site is updated (§4.12) | Yes |
+| **Can be removed** | Yes | Yes | No (§4.10) |
+
+### An app's identity is the manifest plus the container
+
+Chromium keys an installed app on its manifest `id` within a profile. Firefox's isolation unit sits inside the profile, so the same key would make two containers running one app indistinguishable to everything downstream of it.
+
+The identity key is therefore the manifest `id` **and** the container. Consequences, all of them already specified:
+
+| Question | Answer |
+|---|---|
+| Can one app exist twice? | Yes, once per container (§5.1) |
+| How are they told apart? | By name, which the second copy is required to make distinct, because the taskbar shows neither the container nor this list |
+| Which one captures a link? | Exactly one, chosen explicitly (§4.7) |
+| Which one starts at sign-in? | Either, both, or neither. Two windows at sign-in is a coherent thing to want (§4.6) |
+
+### Manifest identity requires a secure context
+
+An app's name, icon, start page and area are only taken from a manifest served over HTTPS. A manifest fetched over plain HTTP is editable by anyone on the network, and an app's identity is precisely what should not be.
+
+A **shortcut** to an `http://` address stays allowed, because addressing a device on your own network is a real thing to want and `http://homeassistant.local:8123` is a real example of it. Settings does not badge or warn about this. The warning belongs in the window, where the risk is (§10), not in a list of things you configured on purpose.
+
+### The area is a set, not an origin
+
+An app's area is stored as a list of matchers, currently always of length one. Chromium ships `scope_extensions`, which lets an app claim further origins if each one opts in by hosting a file naming the app. Whether or not Firefox implements it, the area must not be written as a single-origin comparison, or a legitimate multi-origin app would have its own second origin rejected by §4.2.
 
 ![A row showing the From the site badge alongside the others](docs/screenshots/spec/3.1-row-badges.png)
 
@@ -648,6 +698,29 @@ The address is different. A window that presents itself as an app, wears the sit
 
 - Two list sections, a Type column, or a provenance filter.
 - A hidden advanced override for the address (§4.2).
-- Editable icons, for either kind.
+- Editable icons, for any kind.
 - A verified or trusted badge.
 - Separate "Uninstall" vocabulary (§4.10).
+- An insecure-origin badge in the list. The window carries it instead (§10).
+- **File and protocol handlers.** Chromium registers the `file_handlers` and `protocol_handlers` a manifest declares into the Windows registry, and unregisters them on uninstall. This design models neither, because a claim on `.pdf` or on a URL scheme is an OS-level assertion Firefox would have to actually make, and a control for something the operating system will ignore is the unpin toggle again (§6). If they ever land, §4.10 and §5.4 must enumerate what removal takes with it, because "deletes the shortcut Firefox created" would no longer be the whole truth.
+- **Anything a manifest declares beyond identity**: `share_target`, `shortcuts`, `launch_handler`, badging, widgets. None affects what this page shows.
+
+---
+
+## 10. The app window
+
+The settings on this page produce a window with reduced chrome. That window is not part of Settings, but it is where the identity rules in §9 are either upheld or wasted, so its requirements belong here.
+
+**The problem.** Removing the address bar removes the browser's main anti-phishing affordance. Constraining the address in §4.2 stops a Taskbar Tab being repointed through Settings; it does nothing about the app navigating itself somewhere else once it opens, which is cheaper and does not involve Settings at all.
+
+**The rule.** The origin is always present, in real window chrome that content cannot paint over, and its appearance changes when the app leaves the area it declares.
+
+| State | Shows |
+|---|---|
+| **In the app's area** | A padlock and the origin, in the title bar beside the app name |
+| **Outside it** | A warning icon, the new origin, and *"Outside {app name}"*, replacing the calm state |
+| **Not secure** | A warning icon and *"Not secure"* before the origin. This is where an `http://` shortcut is called out (§9), and it is the only place |
+
+Chromium shows nothing while in scope and raises a mini URL bar only on leaving it. That is one state better than nothing and one worse than this, because a page rendered in standalone mode can draw a convincing imitation of the browser's own indicator, and an indicator that is usually absent is the easiest kind to counterfeit: there is nothing to compare it against. An origin that is always there, always in the same place, and outside the content area is a much poorer target.
+
+This does not make the window unspoofable. It makes the spoof compete with a real control in a fixed position rather than filling a vacuum.

@@ -72,6 +72,30 @@ Chrome's other two rules transfer without argument. Icon changes under a 10% pix
 
 Both designs share one gap. A change nobody goes looking for is never seen: Chrome's sits in a menu, ours sits on a page you have to visit.
 
+## The window is where the security actually lives
+
+Everything else in this design is a settings page, and a settings page is not what an attacker goes through. The address constraint stops a Taskbar Tab being repointed through Settings, which is the expensive attack. The cheap one is the app navigating itself off its own origin the moment it opens, in a window with no address bar, wearing the site's icon and holding its cookies.
+
+So the origin is always shown, in real chrome, and it changes appearance when the app leaves the area it declares. Chromium shows nothing in scope and raises a mini URL bar on leaving it, which is better than nothing and worse than this for a specific reason: a page in standalone mode can draw a passable imitation of the browser's own indicator, and an indicator that is normally absent is the easiest kind to fake, because there is nothing on screen to compare the fake against. A control that is always present, always in the same place, and outside the content area is a much poorer target. It does not make spoofing impossible. It makes the spoof compete with a real thing instead of filling a vacuum.
+
+The same slot carries the insecure case. An `http://` shortcut to a device on your own network is a legitimate thing to want, and `homeassistant.local:8123` is why the design allows it, so the answer is not to refuse it but to say so where it matters. That is also why the list does not badge it: nothing is learned from being told an address you typed on purpose is the address you typed. A manifest is different, and is never trusted over plain HTTP at all, because an identity anyone on the network can edit is not an identity.
+
+## The Add dialog makes shortcuts, and only shortcuts
+
+Chromium installs from a page you already have open. The manifest is already fetched, the origin is already in your history, and the decision to install comes after the decision to visit. Our Add dialog inverted that: type an address, and Settings has to go and fetch that origin's manifest to know what to offer, before you have committed to anything and possibly for an address you pasted from someone else.
+
+That is a request the person did not ask for, to a server they may not know, from a page where nobody expects network activity. The fix is not to make the fetch quieter. It is to notice that the address bar is already the right place, because the page is loaded there by definition. So the dialog makes shortcuts, the address bar installs apps, and a shortcut that turns out to point at a site providing an app is offered the switch on its own settings page, which needs no speculative fetch either.
+
+Each entry point now does one thing and none of them has to guess.
+
+## Containers make one app into two, and everything downstream has to cope
+
+Chromium keys an app on its manifest `id` inside a profile, so one app is one entry. Firefox's isolation unit sits inside the profile, which means two containers can run one app, and the manifest `id` alone stops being an identity.
+
+The first version of this shipped a real bug: duplicate detection compared the address and ignored the container, so adding Outlook in Work and again in Personal was refused. That broke the one capability this design has that Chromium does not, in exactly the case containers exist for.
+
+The key is the manifest plus the container, and that forces three smaller answers. Two copies get told apart by name, which the second copy is required to make distinct, because the taskbar shows neither the container nor this settings page and two identical icons where one is your work account is a genuine hazard. Only one copy captures links, chosen explicitly, because a link has one destination and the alternative is either a dialog in the path of every click or a rule about recency that nobody can predict. Both may start at sign-in, because wanting two windows is coherent in a way that wanting a link to go to two places is not.
+
 ## Permissions are shown, not edited
 
 This is the most important honesty decision on the page. Firefox grants permissions to a site rather than to a Taskbar Tab, so blocking the camera for `outlook.office.com` blocks it in the app and in every ordinary tab. Editable dropdowns here would have worked perfectly well and would also have taught people something false about how Firefox works, so the page shows the current state and links out to site permissions, where the change is presented at its true scope.
@@ -88,6 +112,8 @@ So there is no pin toggle, no unpin action anywhere, and no bulk unpin. The pinn
 - **Change icon.** Icons come from the site, and overriding them brings its own storage and fallback questions.
 - **Editable per-app permissions.** Covered above.
 - **An advanced override for a site app's address.** Every legitimate need is met by editing within the app's area or adding a separate Taskbar Tab. An override would add only the illegitimate case, and hidden advanced flows are worst for exactly the people most likely to be talked into using them.
+- **File and protocol handlers.** Chromium registers what a manifest declares into the Windows registry and unregisters it on uninstall. Claiming `.pdf` or a URL scheme is an assertion Firefox would have to actually make, and offering a control the operating system ignores is the unpin toggle over again. The liability is recorded rather than hidden: if handlers ever land, the removal copy promising that only a shortcut goes away stops being true.
+- **An insecure-origin badge in the list.** The window carries it. A list of things you configured on purpose is a poor place to be told about the address you typed.
 - **Two list sections, a Type column or a provenance filter.** Costs recall and permanent space to organise by a fact that matters on two screens.
 - **Separate "Uninstall" vocabulary.** Nothing extra is uninstalled today. Worth revisiting if manifest apps ever gain real installed state, like handler registrations or their own storage bucket.
 - **Anything mobile.** Android and iOS install sites through entirely different OS mechanisms, so none of this design applies there.
@@ -102,10 +128,11 @@ Chromium already offers open in window, run at login, per-app link capture, perm
 
 ## Open questions
 
-1. **Scope versus start page.** The address does double duty today: where the app opens, and by host, which links it captures. Firefox may eventually want those separate, with a start page of `/mail/inbox` and a capture scope covering the whole domain.
+1. **Scope versus start page, for shortcuts.** Manifest apps resolved this for free: the declared scope is the capture area and the start page is separate. A shortcut declares nothing, so its address still does double duty and its capture falls back to the whole host, which is the coarser rule. Whether a shortcut should be able to state its own area, or whether that is just an app with extra steps, is unsettled.
 2. **Whether a pin survives a rebuilt shortcut.** We warn that it may not. What Windows actually does needs testing on real hardware.
 3. **macOS.** The Dock needs a real `.app` bundle per app, which is a different shape of problem and the main reason this is Windows-first.
 4. **When Firefox starts reading manifests.** Today's Taskbar Tabs takes its name and icon from the page, so the second kind of entry does not exist yet. The provenance work is deliberately ahead of that: the interface for developer-owned identity is the part that has to be right before the first app arrives carrying one, not after. What is unresolved is the timing, and which manifest members land first.
 5. **Badge wording.** "From the site" and "Added by you" won on honesty; "Installed app" and "Shortcut" would win on familiarity. Close enough to be worth testing rather than arguing.
 6. **Whether a manifest update should rebuild the shortcut.** Rebuilding may cost the pin, so a developer's edit could silently unpin an app. Adopting the new name in-app and deferring the rebuild may be the safer trade, and it needs the same real-hardware testing question 2 does.
-7. **Enterprise.** Chromium lets administrators force-install apps. That would be a third provenance, and neither the badge pair nor the editing rules cover it.
+7. **Whether the always-present origin costs too much of the app feel.** The whole point of a Taskbar Tab is that it does not look like a browser, and a permanent origin in the title bar is a permanent reminder that it is one. The trade is deliberate, but it is the kind of thing that only a real build settles.
+8. **Whether a single link-capture holder is the right rule** once someone actually runs two work accounts side by side. It is the predictable answer, which is why it won, but predictable is not the same as convenient.
