@@ -1,15 +1,15 @@
-# Managing Taskbar Tabs: Options Specification
+# Taskbar Tabs Management: Options Specification
 
-Every configurable option in the interface, what each of its states does, and how it behaves at the edges.
+This document gives each configurable option in the interface, the function of each of its states, and its behaviour in unusual conditions.
 
-**Location:** Settings → Taskbar Tabs (`about:preferences#taskbarTabs`), its own sidebar item directly below Tabs and browsing
-**Platform:** Windows desktop (Linux behaviour follows where supported; macOS not covered)
+**Location:** Settings → Taskbar Tabs (`about:preferences#taskbarTabs`). It is its own item in the sidebar, directly below Tabs and browsing.
+**Platform:** Windows desktop. Linux behaviour follows where Firefox gives support. This document does not include macOS.
 
 ---
 
 ## 1. Global settings
 
-Three checkboxes in the Settings card. All apply to Firefox as a whole, for the current profile.
+The Settings card holds three checkboxes. All three apply to all of Firefox, for the current profile.
 
 ### 1.1 Show the "Add to taskbar" button in the address bar
 
@@ -20,14 +20,14 @@ Three checkboxes in the Settings card. All apply to Firefox as a whole, for the 
 
 | State | Behaviour |
 |---|---|
-| **On** | The "Add to taskbar" icon appears at the right of the address bar on every eligible page. Clicking it adds the current tab as a Taskbar Tab. On a site that provides an app (§9) the button reads **Install {name}** instead. |
-| **Off** | The icon is hidden. Taskbar Tabs can still be added from the tab context menu and from the **Add Taskbar Tab…** button on this page. |
+| **On** | The "Add to taskbar" icon shows at the right of the address bar on each applicable page. When you click it, Firefox adds the current tab as a Taskbar Tab. On a site that supplies an app (§9), the button reads **Install {name}**. |
+| **Off** | The icon is hidden. You can add Taskbar Tabs from the tab context menu and from the **Add Taskbar Tab…** button on this page. |
 
-**This is the only place an app can be installed from.** The **Add Taskbar Tab…** button makes shortcuts and never installs, because installing requires the manifest and this is the one entry point where the page is already loaded (§5.1). Turning the button off therefore removes the install path, leaving §4.11 as the way to reach it: add a shortcut, then switch.
+**This is the only location that can install an app.** The **Add Taskbar Tab…** button makes shortcuts and never installs an app. An installation needs the manifest, and this is the one entry point where the browser already has the page (§5.1). Thus, if you turn the button off, you remove the installation path. §4.11 is then the method to install an app: add a shortcut, then change it to the app.
 
 ![The address bar button checkbox, turned on](docs/screenshots/spec/1.1-show-urlbar-button.png)
 
-Turning this off never removes existing Taskbar Tabs, and never blocks adding new ones, since it only hides one entry point.
+If you turn this off, Firefox never removes an existing Taskbar Tab, and never prevents new Taskbar Tabs. It only hides one entry point.
 
 ---
 
@@ -40,14 +40,14 @@ Turning this off never removes existing Taskbar Tabs, and never blocks adding ne
 
 | State | Behaviour |
 |---|---|
-| **On** | Link capture is available. A link to a site you've added opens in that tab's window instead of a new browser tab, for each app that has its own switch on. |
-| **Off** | Link capture is disabled everywhere. All links open in ordinary browser tabs regardless of per-app settings. |
+| **On** | Link capture is available. A link to a site that you added opens in the window of that tab and not in a new browser tab. This applies to each app that has its own switch on. |
+| **Off** | Link capture is off in all locations. Each link opens in a usual browser tab, independent of the setting for each app. |
 
 ![The link capture checkbox, turned on](docs/screenshots/spec/1.2-open-links.png)
 
-**Interaction with the per-app switch:** this is the master for §4.7. When off, every app's "Open links to this site here" toggle is disabled and shows the message *"Turn on 'Open links in their Taskbar Tab' in Taskbar Tabs settings to use this."* Per-app values are remembered, not erased, and take effect again when this is turned back on.
+**Effect on the switch for each app:** this checkbox is the master control for §4.7. When it is off, the "Open links to this site here" toggle of each app is disabled and shows the message *"Turn on 'Open links in their Taskbar Tab' in Taskbar Tabs settings to use this."* Firefox keeps the value for each app and does not erase it. The values operate again when you turn this checkbox on.
 
-**New tabs** inherit this setting as the initial value of their per-app switch.
+**New tabs** take this setting as the initial value of their own switch.
 
 ---
 
@@ -60,12 +60,12 @@ Turning this off never removes existing Taskbar Tabs, and never blocks adding ne
 
 | State | Behaviour |
 |---|---|
-| **On** | Taskbar Tab windows are included in session restore and come back when Firefox restarts. |
-| **Off** | Taskbar Tab windows are excluded from session restore, matching Firefox's current behaviour. Ordinary tabs and windows are unaffected either way. |
+| **On** | Session restore includes Taskbar Tab windows. They come back when Firefox restarts. |
+| **Off** | Session restore does not include Taskbar Tab windows. This is the current Firefox behaviour. Usual tabs and windows are the same in both states. |
 
 ![The session restore checkbox, turned off](docs/screenshots/spec/1.3-reopen-on-restart.png)
 
-This does not control launching at sign-in, which is per-app (§4.6).
+This checkbox does not control the start at sign-in. Each app has its own control for that (§4.6).
 
 ---
 
@@ -73,20 +73,20 @@ This does not control launching at sign-in, which is per-app (§4.6).
 
 | | |
 |---|---|
-| **Control** | Button, on the Settings card heading row |
-| **Visibility** | Hidden while all three checkboxes are at their defaults; visible as soon as any one differs |
+| **Control** | Button, on the heading row of the Settings card |
+| **Visibility** | Hidden while the three checkboxes are at their defaults. Visible as soon as one checkbox is different. |
 
 | Action | Result |
 |---|---|
-| **Click** | Sets §1.1 to On, §1.2 to On, §1.3 to Off. Shows the toast *"Taskbar Tab settings restored to defaults"*. The button then hides itself. |
+| **Click** | Sets §1.1 to On, §1.2 to On, and §1.3 to Off. Shows the toast *"Taskbar Tab settings restored to defaults"*. The button then hides itself. |
 
 ![The Settings card with Restore defaults on the heading row](docs/screenshots/spec/1.4-restore-defaults.png)
 
-*Shown with §1.3 changed from its default, which is what makes the button appear.*
+*The image shows §1.3 at a value that is different from its default. This makes the button visible.*
 
-**Scope:** the three checkboxes above it only. It does not touch any individual Taskbar Tab, its container, its address, its permissions or its data.
+**Extent:** only the three checkboxes above the button. The button does not change an individual Taskbar Tab, its container, its address, its permissions, or its data.
 
-While hidden the button reserves its space (so nothing shifts) and is excluded from the tab order and from screen readers.
+While the button is hidden, it keeps its space. Thus no other control moves. The tab order and screen readers do not include the hidden button.
 
 ---
 
@@ -99,21 +99,21 @@ While hidden the button reserves its space (so nothing shifts) and is excluded f
 | **Control** | Search field |
 | **Default** | Empty |
 
-Filters the list live as you type, matching against the tab's name, its address, and the name the site provides (§9). Case-insensitive.
+The search field filters the list while you type. It compares the text with the name of the tab, its address, and the name that the site supplies (§9). It ignores case.
 
-Matching the site-provided name matters because an app renamed to "Work Mail" is still the thing someone will search for as "Outlook".
+The comparison with the name from the site is important. A person searches for "Outlook" although the app now has the name "Work Mail".
 
 | Condition | Result |
 |---|---|
-| **Empty** | All Taskbar Tabs shown. |
-| **Matches found** | Only matching rows shown; sort order preserved. |
+| **Empty** | The list shows each Taskbar Tab. |
+| **Matches found** | The list shows only the rows that match. It keeps the sort order. |
 | **No matches** | Empty state: *"No Taskbar Tabs match "…""* with a **Clear search** button. |
 
-![The list filtered by a search term](docs/screenshots/spec/2.1-search.png)
+![The list with a search filter](docs/screenshots/spec/2.1-search.png)
 
-*Searching for `home`, with one row matching.*
+*A search for `home`, with one row that matches.*
 
-Changing the search clears any active selection.
+A change to the search text clears the current selection.
 
 ---
 
@@ -126,36 +126,36 @@ Changing the search clears any active selection.
 
 | Option | Order |
 |---|---|
-| **Name (A to Z)** | Alphabetical by display name. |
-| **Recently used** | Most recently opened first. |
-| **Recently added** | Most recently added first. |
-| **Data stored** | Largest stored data first. |
+| **Name (A to Z)** | Alphabetical, by the name on the display. |
+| **Recently used** | The most recent tab first. |
+| **Recently added** | The most recent addition first. |
+| **Data stored** | The largest quantity of data first. |
 
-![The search field and sort dropdown](docs/screenshots/spec/2.2-sort-by.png)
+![The search field and the sort dropdown](docs/screenshots/spec/2.2-sort-by.png)
 
-Sorting affects display only. It has no effect on taskbar order, which Windows controls.
+The sort order changes only the display. It has no effect on the order of the taskbar, which Windows controls.
 
 ---
 
-### 2.3 Select all / selection
+### 2.3 Select all and row selection
 
 | | |
 |---|---|
-| **Control** | Checkbox above the list, plus one per row |
+| **Control** | One checkbox above the list, and one checkbox in each row |
 | **Default** | Nothing selected |
 
 | State | Behaviour |
 |---|---|
-| **Nothing selected** | The "Select all" checkbox is shown. |
-| **One or more selected** | "Select all" is replaced by the bulk action bar reading *"N selected"*, with **Remove** and **Cancel**. |
+| **Nothing selected** | The page shows the "Select all" checkbox. |
+| **One or more selected** | The bulk action bar replaces "Select all". The bar reads *"N selected"* and holds **Remove** and **Cancel**. |
 
 ![The list with two rows selected](docs/screenshots/spec/2.3-selection.png)
 
-*Two rows selected, with the bulk action bar in place of the "Select all" checkbox.*
+*Two rows are selected. The bulk action bar is in the position of the "Select all" checkbox.*
 
-**Select all** applies to currently *visible* rows, so if a search is active it selects the filtered set only. Clicking it when everything visible is already selected clears the selection.
+**Select all** applies to the *visible* rows. Thus, if a search is active, it selects only the filtered set. If each visible row is already selected, a click clears the selection.
 
-Selection is cleared by: Cancel, changing the search, or completing a removal.
+These three operations clear the selection: Cancel, a change to the search text, and the completion of a removal.
 
 ---
 
@@ -165,7 +165,7 @@ Selection is cleared by: Cancel, changing the search, or completing a removal.
 |---|---|
 | **Control** | Button in the bulk action bar |
 
-Opens the remove confirmation (§5.4) for every selected tab at once. There is no bulk unpin (see §6).
+The button opens the remove confirmation (§5.4) for each selected tab together. There is no bulk unpin control (see §6).
 
 ![The bulk action bar](docs/screenshots/spec/2.4-bulk-remove.png)
 
@@ -177,66 +177,66 @@ Each row has an **Open** button and an overflow (⋯) menu.
 
 | Item | Availability | Behaviour |
 |---|---|---|
-| **Open** | Always | Launches the tab in its own window at its configured address. |
-| **Open in new tab** | Always | Opens the same address as an ordinary browser tab, in the tab's container. |
+| **Open** | Always | Starts the tab in its own window at its configured address. |
+| **Open in new tab** | Always | Opens the same address as a usual browser tab, in the container of the tab. |
 | **Pin to taskbar** | Only when the tab is **not** pinned | Asks Windows to add the icon to the taskbar. |
-| **Rename…** | Always | Opens the app settings page with the Name field focused and its text selected. |
-| **Copy address** | Always | Copies the tab's full address to the clipboard. |
+| **Rename…** | Always | Opens the app settings page, puts the focus in the Name field, and selects its text. |
+| **Copy address** | Always | Copies the full address of the tab to the clipboard. |
 | **App settings…** | Always | Opens the app settings page. |
-| **Clear cookies and site data…** | Always | Opens the clear-data confirmation (§5.5). |
+| **Clear cookies and site data…** | Always | Opens the confirmation that deletes the data (§5.5). |
 | **Remove Taskbar Tab…** | Always | Opens the remove confirmation (§5.4). |
 
 ![A row with its overflow menu open](docs/screenshots/spec/3-row-menu.png)
 
-There is deliberately **no unpin option**. See §6.
+There is intentionally **no unpin item**. See §6.
 
 ### 3.1 Row badges (read-only)
 
 | Badge | Meaning |
 |---|---|
-| **From the site** | The app's name, icon and start page come from the site (§9). |
-| **Added by you** | The address and name were chosen by the person, not the site. |
-| **Installed by {authority}** | Force-installed by policy. Identity comes from the manifest as above, but removal does not (§4.10). |
-| **Pinned to taskbar** | The icon is currently on the taskbar. |
-| **Not pinned** | The tab exists but has no taskbar icon. |
-| *Container name* + colour dot | The container the tab runs in. Absent when no container is set. |
+| **From the site** | The name, the icon, and the start page of the app come from the site (§9). |
+| **Added by you** | The person selected the address and the name, and not the site. |
+| **Installed by {authority}** | A policy installed the app. The identity comes from the manifest, as above, but the removal rules are different (§4.10). |
+| **Pinned to taskbar** | The icon is on the taskbar now. |
+| **Not pinned** | The tab exists, but it has no icon on the taskbar. |
+| *Container name* and a colour dot | The container that the tab runs in. The badge is absent when the tab has no container. |
 | **Opens at login** | "Open when I sign in" is on for this tab. |
-| **Exact page** | The address includes a path, so it opens a specific page rather than the site's home page. |
+| **Exact page** | The address includes a path. Thus the tab opens a specific page and not the home page of the site. |
 
-These are labels, not controls.
+These badges are labels, and not controls.
 
-![A single row showing its badges](docs/screenshots/spec/3.1-row-badges.png)
+![One row with its badges](docs/screenshots/spec/3.1-row-badges.png)
 
 ---
 
-## 4. Per-app settings
+## 4. Settings for each app
 
-Reached by clicking a tab's name, **App settings…**, or **Rename…**.
+You open this page when you click the name of a tab, **App settings…**, or **Rename…**.
 
-For a tab whose identity comes from the site (§9), the header carries one extra line:
+If the identity of a tab comes from the site (§9), the header has one more line:
 *"This app is provided by {host}, which sets its name, icon and start page. You can rename it here for yourself."*
-Nothing else on the page changes shape.
+No other part of the page changes.
 
 ### 4.1 Name
 
 | | |
 |---|---|
 | **Control** | Text field, part of the Name and address form |
-| **Default** | The name given when the tab was added, or the site-provided name |
-| **Validation** | Cannot be empty |
+| **Default** | The name at the time of the addition, or the name from the site |
+| **Validation** | The field cannot be empty |
 
-Sets the name shown in the Start menu, in Alt+Tab and on this page. Does not change the site.
+This field sets the name in the Start menu, in Alt+Tab, and on this page. It does not change the site.
 
-Changes are held until **Save changes** (§4.4). Submitting an empty name focuses the field and shows *"Give the app a name so you can find it in the Start menu"*.
+Firefox keeps the changes until you click **Save changes** (§4.4). If you submit an empty name, the field takes the focus and shows *"Give the app a name so you can find it in the Start menu"*.
 
-**Editable for both kinds.** The name is a private label: it is never transmitted, never used in an origin decision and never a security boundary, so a site-provided name can be replaced with a local one.
+**The field is editable for both types.** The name is a private label. Firefox never transmits it, never uses it in a decision about an origin, and never uses it as a security boundary. Thus a local name can replace a name from the site.
 
-| Element | Shown when |
+| Element | Condition |
 |---|---|
-| *"The site calls this app "{site name}"."* appended to the field description | The tab came from the site |
-| **Use the name from the site** button | The current name differs from the site's |
+| *"The site calls this app "{site name}"."* at the end of the field description | The tab came from the site |
+| **Use the name from the site** button | The current name is different from the name of the site |
 
-The site's name stays visible whether or not it is in use, so the developer's claim is always legible.
+The name of the site stays visible in both conditions. Thus the claim of the developer is always legible.
 
 ![The Name field](docs/screenshots/spec/4.1-name.png)
 
@@ -247,37 +247,37 @@ The site's name stays visible whether or not it is in use, so the developer's cl
 | | |
 |---|---|
 | **Control** | Text field, part of the Name and address form |
-| **Default** | The address the tab was added with |
-| **Validation** | Must resolve to a valid `http://` or `https://` URL |
+| **Default** | The address at the time of the addition |
+| **Validation** | The text must give a valid `http://` or `https://` URL |
 
-The address the tab opens to. A bare host (`example.com`) opens the site's home page; a full address (`example.com/mail/inbox`) opens that page, which is what makes two pages on one site into two separate Taskbar Tabs.
+This is the address that the tab opens. A host alone (`example.com`) opens the home page of the site. A full address (`example.com/mail/inbox`) opens that page. Thus two pages on one site can become two separate Taskbar Tabs.
 
-| Input | Result on save |
+| Input | Result at the save operation |
 |---|---|
-| **Full URL** | Used as typed, normalised. |
-| **No scheme** | `https://` is added automatically. |
-| **Not a URL** | Save is blocked; the field is marked invalid and a message explains the expected format. |
+| **Full URL** | Firefox uses the text as you typed it, in its normal form. |
+| **No scheme** | Firefox adds `https://` automatically. |
+| **Not a URL** | Firefox stops the save operation. The field becomes invalid and a message gives the correct format. |
 
-Whether the tab shows the **Exact page** badge is derived from this field rather than from a separate switch.
+Firefox calculates the **Exact page** badge from this field. There is no separate switch.
 
-**Constrained for tabs that came from the site.** The field stays editable, but the address must fall inside the area the app declares, so a description sits beneath it: *"Must stay within `outlook.office.com/mail/`, the area this app covers."*
+**The field is constrained for a tab that came from the site.** The field stays editable, but the address must stay in the area that the app declares. The field shows no permanent description about that area. The interface gives the rule only when a person breaks it, in the validation message below. A permanent line would repeat the message and would add text to a field that is correct in almost all conditions.
 
-| Input | Result on save |
+| Input | Result at the save operation |
 |---|---|
-| **Inside the area** | Saved normally. Opening at `/mail/calendar` instead of `/mail/inbox` is allowed |
-| **Outside the area** | Rejected. The field is marked invalid and shows *"`example.com/inbox` is outside this app's area. {name} covers `outlook.office.com/mail/`. To open a different page in its own window, add a Taskbar Tab."*, followed by an **Add a Taskbar Tab instead** button that opens §5.1 prefilled with what was typed |
+| **In the area** | Firefox saves the address. You can open the app at `/mail/calendar` and not at `/mail/inbox`. |
+| **Outside the area** | Firefox refuses the address. The field becomes invalid and shows *"`example.com/inbox` is outside this app's area. {name} covers `outlook.office.com/mail/`. To open a different page in its own window, add a Taskbar Tab."* An **Add a Taskbar Tab instead** button is below the message. The button opens §5.1 with the text that you typed. |
 
-The field is validated rather than disabled. A disabled field says only "you can't"; a validated one teaches the rule at the moment it matters and leaves a working alternative in reach.
+The field has validation and is not disabled. A disabled field says only "you cannot". A field with validation gives the rule at the moment that the rule is important, and keeps an alternative available.
 
-There is **no advanced override**. Every legitimate need is met by editing within the area or by adding a separate Taskbar Tab; an override would add only the case where an app keeps its name and icon while pointing somewhere else.
+There is **no advanced override**. You can satisfy each correct need if you edit the address in the area or add a separate Taskbar Tab. An override would add only the condition where an app keeps its name and its icon but points to a different location.
 
 ![The Address field](docs/screenshots/spec/4.2-address.png)
 
-*The Address field of an app from the site, with the area it covers stated beneath it.*
+*The Address field of an app from the site. The area of the app is not on the page until a person breaks the rule.*
 
-![The Address field rejecting an out-of-scope address](docs/screenshots/spec/4.2-out-of-scope.png)
+![The Address field refuses an address that is outside the area](docs/screenshots/spec/4.2-out-of-scope.png)
 
-*The rejection names what was typed, the rule, and what to do instead.*
+*The message gives the text that you typed, the rule, and the alternative.*
 
 ---
 
@@ -285,41 +285,41 @@ There is **no advanced override**. Every legitimate need is met by editing withi
 
 | | |
 |---|---|
-| **Control** | Button beside the Address field |
-| **Label** | **Use home page** for a tab you added; **Use start page** for one from the site |
+| **Control** | Button adjacent to the Address field |
+| **Label** | **Use home page** for a tab that you added. **Use start page** for a tab from the site. |
 
-| Kind | Enabled when | Result |
+| Type | Enabled when | Result |
 |---|---|---|
-| **Added by you** | The address includes a path | Trims the address back to its origin |
-| **From the site** | The address differs from the app's start page | Resets it to the start page the app declares |
+| **Added by you** | The address includes a path | Removes the path and keeps the origin |
+| **From the site** | The address is different from the start page of the app | Sets the address to the start page that the app declares |
 
-It edits the draft only, so you still have to save.
+The button changes only the draft. You must still save the change.
 
-A hover/focus tooltip explains it, naming the target: *"Shortens the address to just outlook.office.com. Keep a full address to give one page its own Taskbar Tab."*, or *"Resets the address to https://outlook.office.com/mail/, the start page this app declares."*
+A tooltip shows at hover and at focus, and gives the target: *"Shortens the address to just outlook.office.com. Keep a full address to give one page its own Taskbar Tab."*, or *"Resets the address to https://outlook.office.com/mail/, the start page this app declares."*
 
-![The Use home page button with its tooltip visible](docs/screenshots/spec/4.3-use-home-page.png)
+![The Use home page button with its tooltip](docs/screenshots/spec/4.3-use-home-page.png)
 
 ---
 
-### 4.4 Save changes / Cancel
+### 4.4 Save changes and Cancel
 
 | | |
 |---|---|
 | **Controls** | Two buttons below the Name and address fields |
-| **Enabled when** | Either field differs from the saved value |
-| **Disabled when** | Nothing has changed |
+| **Enabled when** | One field or both fields are different from the saved value |
+| **Disabled when** | Nothing changed |
 
 | Action | Result |
 |---|---|
-| **Save changes** (tab is **not** pinned) | Applies immediately. Toast: *"Changes saved for {name}"*. |
-| **Save changes** (tab **is** pinned) | Opens the save confirmation (§5.2) first. |
-| **Cancel** | Discards both edits and restores the saved values. |
+| **Save changes** (the tab is **not** pinned) | Firefox applies the changes immediately. Toast: *"Changes saved for {name}"*. |
+| **Save changes** (the tab **is** pinned) | Firefox opens the save confirmation (§5.2) first. |
+| **Cancel** | Firefox discards the two edits and puts back the saved values. |
 
-Leaving the page also discards unsaved edits.
+If you go off the page, Firefox also discards the edits that you did not save.
 
 ![The Name and address card with Save changes enabled](docs/screenshots/spec/4.4-save-changes.png)
 
-*Both buttons enable only once a field differs from the saved value.*
+*The two buttons become enabled only when a field is different from the saved value.*
 
 ---
 
@@ -328,18 +328,18 @@ Leaving the page also discards unsaved edits.
 | | |
 |---|---|
 | **Control** | Dropdown |
-| **Default** | The container the tab was created in |
-| **Options** | No container, Work, Personal, Banking, Shopping (mirrors the profile's containers) |
+| **Default** | The container at the time of the creation of the tab |
+| **Options** | No container, Work, Personal, Banking, Shopping (the containers of the profile) |
 
-Determines which cookies and sign-ins the tab uses.
+The container controls which cookies and which sign-ins the tab uses.
 
 | Action | Result |
 |---|---|
-| **Select a different container** | Opens the change-container confirmation (§5.3) immediately. |
-| **Confirm** | Container is applied, the stored-data figure resets to zero, and a toast offers **Undo**. |
-| **Cancel / Escape / click outside** | The dropdown snaps back to its previous value; nothing changes. |
+| **Select a different container** | Firefox opens the confirmation for the container change (§5.3) immediately. |
+| **Confirm** | Firefox applies the container. The quantity of data in storage becomes zero, and a toast offers **Undo**. |
+| **Cancel, Escape, or a click outside** | The dropdown goes back to its previous value. Nothing changes. |
 
-Applies immediately on confirm, so it is not part of the Save changes form.
+The change applies immediately at the confirmation. Thus it is not part of the Save changes form.
 
 ![The Container dropdown](docs/screenshots/spec/4.5-container.png)
 
@@ -350,14 +350,14 @@ Applies immediately on confirm, so it is not part of the Save changes form.
 | | |
 |---|---|
 | **Control** | Toggle |
-| **Default** | Off for new tabs |
+| **Default** | Off for a new tab |
 
 | State | Behaviour |
 |---|---|
 | **On** | The tab starts automatically when you sign in to the device. |
-| **Off** | It starts only when you open it. |
+| **Off** | The tab starts only when you open it. |
 
-Independent of §1.3, which governs Firefox restarts rather than device sign-in.
+This toggle is independent of §1.3, which controls a Firefox restart and not a device sign-in.
 
 ![The Open when I sign in toggle](docs/screenshots/spec/4.6-open-at-sign-in.png)
 
@@ -368,39 +368,39 @@ Independent of §1.3, which governs Firefox restarts rather than device sign-in.
 | | |
 |---|---|
 | **Control** | Toggle |
-| **Default** | Inherits §1.2 at the time the tab was added, except for a second copy in another container, which starts off |
+| **Default** | The value of §1.2 at the time of the addition. A second copy in a different container starts off. |
 | **Disabled when** | §1.2 is off |
 
 | State | Behaviour |
 |---|---|
-| **On** | Links falling inside this app's area, opened in Firefox, come to this window instead of a new tab. |
-| **Off** | Those links open as ordinary tabs. |
-| **Disabled** | Shows *"Turn on 'Open links in their Taskbar Tab' in Taskbar Tabs settings to use this."* The stored value is kept. |
+| **On** | A link that is in the area of this app, and that you open in Firefox, comes to this window and not to a new tab. |
+| **Off** | These links open as usual tabs. |
+| **Disabled** | The interface shows *"Turn on 'Open links in their Taskbar Tab' in Taskbar Tabs settings to use this."* Firefox keeps the value in storage. |
 
-**What counts as the app's area** depends on where the tab came from (§9):
+**The area of the app** depends on the source of the tab (§9):
 
-| Kind | Area matched | Why |
+| Type | Area | Reason |
 |---|---|---|
-| **From the site** | The declared scope, e.g. `outlook.office.com/mail/` | The site said what it covers, so nothing wider is claimed |
-| **Added by you** | The whole host | A shortcut declares nothing, so the host is the only rule available |
+| **From the site** | The declared area, for example `outlook.office.com/mail/` | The site declared its extent. Thus the app claims nothing more. |
+| **Added by you** | The full host | A shortcut declares nothing. Thus the host is the only available rule. |
 
-Host matching is the coarser of the two, and on a shared host it captures other people's pages. The description says so: *"A shortcut has no declared area, so this covers the whole site."*
+A comparison by host is the more coarse of the two rules. On a shared host, it captures the pages of other persons. The description gives this information: *"A shortcut has no declared area, so this covers the whole site."*
 
-**Only one copy can capture.** Two copies of one app in different containers would otherwise both claim the same link and a link has one destination. Turning this on releases it from any sibling copy, and the description names the copy that holds it: *"Microsoft Outlook in work opens these links today. Turning this on moves them here."* A toast confirms the move.
+**Only one copy can capture links.** If not, two copies of one app in different containers claim the same link, but a link has one destination. When you turn this toggle on, Firefox releases the capture from the other copy. The description gives the name of the copy that holds the capture now: *"Microsoft Outlook in work opens these links today. Turning this on moves them here."* A toast confirms the change.
 
 ![The Open links to this site here toggle](docs/screenshots/spec/4.7-open-links-here.png)
 
-*Shown in its enabled state. When §1.2 is off, the toggle greys out and the description changes.*
+*The image shows the enabled state. When §1.2 is off, the toggle becomes grey and the description changes.*
 
 ---
 
 ### 4.8 Site permissions (read-only)
 
-Four rows (Notifications, Camera, Microphone, Location), each showing **Allowed**, **Ask every time** or **Blocked**.
+The card has four rows (Notifications, Camera, Microphone, Location). Each row shows **Allowed**, **Ask every time**, or **Blocked**.
 
-**Not editable here, by design.** Firefox grants permissions to a site, not to a Taskbar Tab, so these values apply to the host everywhere in the profile, including ordinary tabs. The page says so explicitly.
+**These values are not editable here, and that is intentional.** Firefox gives permissions to a site, and not to a Taskbar Tab. Thus these values apply to the host in all locations in the profile, and this includes usual tabs. The page gives this information clearly.
 
-**Change permissions for {host}** links out to site permissions, where the change is presented at its true, site-wide scope.
+The **Change permissions for {host}** link goes to the site permissions, where the interface shows the change at its true extent.
 
 ![The read-only Site permissions card](docs/screenshots/spec/4.8-site-permissions.png)
 
@@ -412,7 +412,7 @@ Four rows (Notifications, Camera, Microphone, Location), each showing **Allowed*
 |---|---|
 | **Control** | Button in Data and removal |
 
-Shows the amount stored for the host in this tab's container, and notes that tabs using the same container share it. Opens the clear-data confirmation (§5.5).
+The row shows the quantity of data in storage for the host in the container of this tab. It also gives the information that tabs in the same container share that data. The button opens the confirmation that deletes the data (§5.5).
 
 ![The Cookies and site data row](docs/screenshots/spec/4.9-clear-data.png)
 
@@ -423,15 +423,15 @@ Shows the amount stored for the host in this tab's container, and notes that tab
 | | |
 |---|---|
 | **Control** | Button in Data and removal |
-| **Absent when** | The tab was installed by policy (§9) |
+| **Absent when** | A policy installed the tab (§9) |
 
-Opens the remove confirmation (§5.4).
+The button opens the remove confirmation (§5.4).
 
-Wording is the same for both kinds. What is removed is the Taskbar Tab: the site is not uninstalled, and it stays available in a normal tab, which is what the dialog already says.
+The text is the same for both types. Firefox removes the Taskbar Tab. It does not uninstall the site, and the site stays available in a usual tab. The dialog already gives this information.
 
-**For a managed tab the button is absent rather than disabled**, and the row says who decides instead: *"Your organisation installed Microsoft Teams and manages whether it can be removed."* A disabled button with no explanation is the dead end §4.2 argues against; naming the authority answers the question the button would have raised. The same tab is also left out of selection entirely (§2.3), since removal is the only bulk action.
+**For a managed tab, the button is absent and not disabled.** The row gives the name of the authority instead: *"Your organisation installed Microsoft Teams and manages whether it can be removed."* A disabled button with no explanation is the dead end that §4.2 refuses. The name of the authority answers the question that the button would cause. The selection controls also do not include a managed tab (§2.3), because removal is the only bulk action.
 
-Removal deletes the shortcut and nothing else today. If Firefox ever registers file or protocol handlers from a manifest (§9), this section and §5.4 have to enumerate what else goes, because the current wording would then be false.
+Today, the removal deletes the shortcut and no more. If Firefox registers file handlers or protocol handlers from a manifest (§9), this section and §5.4 must give each item that the removal deletes. If not, the text becomes untrue.
 
 ![The Remove this Taskbar Tab row](docs/screenshots/spec/4.10-remove.png)
 
@@ -442,38 +442,38 @@ Removal deletes the shortcut and nothing else today. If Firefox ever registers f
 | | |
 |---|---|
 | **Control** | Information bar at the top of the Name and address card |
-| **Shown when** | The tab was added by hand, and its site turns out to provide an app |
+| **Shown when** | A person added the tab manually, and the site supplies an app |
 
-Reads *"**This site provides an app.** {host} offers {name} with its own name, icon and start page. Switching keeps your container, startup and link settings."*
+The bar reads *"**This site provides an app.** {host} offers {name} with its own name, icon and start page. Switching keeps your container, startup and link settings."*
 
 | Action | Result |
 |---|---|
-| **Switch to the app…** | Adopts the site's name, icon, start page and area. Rebuilds the shortcut, so a pinned tab gets the save confirmation (§5.2) first. A name the person chose is kept, becoming a local override |
-| **Not now** | Hides the bar for this tab |
+| **Switch to the app…** | Firefox takes the name, the icon, the start page, and the area from the site. It makes the shortcut again. Thus a pinned tab gets the save confirmation (§5.2) first. Firefox keeps a name that the person selected, and that name becomes a local override. |
+| **Not now** | Firefox hides the bar for this tab. |
 
-![The information bar offering to switch to the app a site provides](docs/screenshots/spec/4.11-site-app.png)
+![The information bar that offers the app from the site](docs/screenshots/spec/4.11-site-app.png)
 
 ---
 
 ### 4.12 Renamed by the site
 
-The one value on this page that can change without the person doing anything.
+This is the one value on this page that can change without an action by the person.
 
-| Situation | Behaviour |
+| Condition | Behaviour |
 |---|---|
-| A local name is set | Keep it. The site's new name appears in the field description and nowhere else |
-| No local name | Adopt the new name and rebuild the shortcut |
+| A local name exists | Firefox keeps the local name. The new name from the site shows in the field description and in no other location. |
+| No local name exists | Firefox takes the new name and makes the shortcut again. |
 
-Adoption is never silent. An information bar sits at the top of the Name and address card until dismissed: *"{host} renamed this app from **{old}** to **{new}** on {date}."*
+Firefox never takes the new name silently. An information bar stays at the top of the Name and address card until you dismiss it: *"{host} renamed this app from **{old}** to **{new}** on {date}."*
 
-The date reads **July 12** for a rename in the current year and **July 12, 2025** for one before it, so the year takes up space only when it is not the obvious one.
+The date reads **July 12** for a change in the current year, and **July 12, 2025** for a change in an earlier year. Thus the year uses space only when it is not the obvious year.
 
 | Action | Result |
 |---|---|
-| **Keep calling it {old}** | Writes {old} as a local name, using the same mechanism as a manual rename, and dismisses the bar |
-| **Dismiss** | Keeps the new name and hides the bar |
+| **Keep calling it {old}** | Firefox writes {old} as a local name, with the same mechanism as a manual rename, and hides the bar. |
+| **Dismiss** | Firefox keeps the new name and hides the bar. |
 
-![The information bar announcing a rename by the site](docs/screenshots/spec/4.12-renamed.png)
+![The information bar for a rename by the site](docs/screenshots/spec/4.12-renamed.png)
 
 ---
 
@@ -481,63 +481,63 @@ The date reads **July 12** for a rename in the current year and **July 12, 2025*
 
 ### 5.1 Add a Taskbar Tab
 
-Opened by **Add Taskbar Tab…**.
+The **Add Taskbar Tab…** button opens this dialog.
 
 | Field | Default | Notes |
 |---|---|---|
-| **Address** | Empty, required | The tab opens at exactly this address. Invalid input blocks submission with an inline error. |
-| **Name** | Empty | If left blank, the host is used with any leading `www.` stripped. |
-| **Container** | No container | Set once, here. |
-| **Pin to taskbar** | Checked | Asks Windows to add the icon. |
+| **Address** | Empty, necessary | The tab opens at exactly this address. Invalid text stops the submission and shows an inline error. |
+| **Name** | Empty | If the field is empty, Firefox uses the host and removes an initial `www.`. |
+| **Container** | No container | You set the container one time, here. |
+| **Pin to taskbar** | Selected | Firefox asks Windows to add the icon. |
 
-**This dialog makes shortcuts only.** It never produces an app whose identity came from a manifest, and it never fetches the address that was typed.
+**This dialog makes only shortcuts.** It never makes an app whose identity comes from a manifest, and it never requests the address that you typed.
 
-The reason is the entry point. Installing from here would mean the Settings page issuing a request to an arbitrary, possibly pasted address before the person had committed to anything, which is a request they did not ask for to a server they may not know. Installing therefore happens from the address bar (§1.1), where the page and its manifest are already loaded because they chose to visit. A shortcut that turns out to point at a site providing an app is offered the switch on its own settings page (§4.11), which needs no speculative fetch either.
+The reason is the entry point. An installation from here would cause the Settings page to send a request to an arbitrary address, possibly an address that you copied, before you agreed to anything. That is a request that the person did not ask for, to a server that the person can be unfamiliar with. Thus the installation occurs from the address bar (§1.1), where the browser already has the page and its manifest, because the person selected to visit the site. If a shortcut points at a site that supplies an app, its own settings page offers the change (§4.11). That offer also needs no speculative request.
 
-Each entry point does one thing, and neither has to guess.
+Each entry point does one task, and neither entry point must guess.
 
-**Duplicates** are caught on submit, and depend on the container, because two containers running one site is what containers are for:
+**Firefox finds duplicates at the submission.** The check includes the container, because containers exist to run one site two times:
 
 | Case | Result |
 |---|---|
-| **Same address, same container** | Refused. *"{name} already opens this address in the same container. Open it from the list, or choose a different page."* |
-| **Same address, different container** | Allowed, and the dialog says so before submission, since two copies share a name and an icon and the taskbar shows neither the container nor this list |
-| **Same address, different container, same name** | Refused on the Name field. *"{name} is already the name of this app in {container}. Give this one a different name."* |
+| **Same address, same container** | Firefox refuses the addition. *"{name} already opens this address in the same container. Open it from the list, or choose a different page."* |
+| **Same address, different container** | Firefox permits the addition. The dialog gives this information before the submission, because two copies share a name and an icon, and the taskbar shows neither the container nor this list. |
+| **Same address, different container, same name** | Firefox refuses the addition at the Name field. *"{name} is already the name of this app in {container}. Give this one a different name."* |
 
-For the allowed case an information bar appears: *"You already have Microsoft Outlook in work. Give this one its own name so you can tell them apart on the taskbar."* The Name field is prefilled with a suggestion, `Microsoft Outlook (Personal)`, or `Microsoft Outlook (2)` when the new copy has no container. The suggestion follows the container as it changes and is dropped if the address stops matching, but a name that was typed is never replaced.
+For the permitted case, an information bar shows: *"You already have Microsoft Outlook in work. Give this one its own name so you can tell them apart on the taskbar."* The Name field has a suggestion, `Microsoft Outlook (Personal)`, or `Microsoft Outlook (2)` when the new copy has no container. The suggestion follows the container while the container changes. Firefox removes the suggestion if the address becomes different. But Firefox never replaces a name that you typed.
 
-A second copy also starts with link capture off (§4.7), since only one copy can hold it.
+A second copy also starts with link capture off (§4.7), because only one copy can hold the capture.
 
-On success the tab is added to the top of the list and a toast confirms, offering **Open**.
+After a correct addition, Firefox puts the tab at the top of the list. A toast confirms the addition and offers **Open**.
 
 ![The Add a Taskbar Tab dialog](docs/screenshots/spec/5.1-add-dialog.png)
 
-![The Add dialog asking for a distinct name for a second copy](docs/screenshots/spec/5.1-second-copy.png)
+![The Add dialog asks for a different name for a second copy](docs/screenshots/spec/5.1-second-copy.png)
 
-*A second copy of an app that already exists in another container.*
+*A second copy of an app that already exists in a different container.*
 
 ---
 
 ### 5.2 Save changes?
 
-Shown only when saving a **pinned** tab's name or address.
+Firefox shows this dialog only when you save the name or the address of a **pinned** tab.
 
-| Element | Shown when |
+| Element | Condition |
 |---|---|
 | *"{old name} will be renamed to {new name}."* | The name changed |
-| *"{new name} will open the following URL:"* + the URL in bold | The address changed |
-| Information bar: *"You may need to pin the app again, since this replaces the shortcut."* | Always (in this dialog) |
+| *"{new name} will open the following URL:"* and the URL in bold | The address changed |
+| Information bar: *"You may need to pin the app again, since this replaces the shortcut."* | Always, in this dialog |
 
 | Action | Result |
 |---|---|
-| **Save changes** | Applies both edits. |
-| **Cancel / Escape** | Returns to the form with edits intact. |
+| **Save changes** | Firefox applies the two edits. |
+| **Cancel or Escape** | Firefox goes back to the form and keeps the edits. |
 
-The URL shown is the normalised version that will be written to the shortcut.
+The dialog shows the URL in its normal form, which is the form that Firefox writes to the shortcut.
 
 ![The Save changes confirmation dialog](docs/screenshots/spec/5.2-save-dialog.png)
 
-*Shown with both the name and the address changed.*
+*The image shows a change to the name and a change to the address.*
 
 ---
 
@@ -545,14 +545,14 @@ The URL shown is the normalised version that will be written to the shortcut.
 
 | Element | Content |
 |---|---|
-| **Title** | *"Move {name} to {container}?"*, or *"Stop using a container for {name}?"* when moving to no container |
+| **Title** | *"Move {name} to {container}?"*, or *"Stop using a container for {name}?"* when you move the tab to no container |
 | **Body** | *"{name} will use the {container} container's cookies and sign-ins for {host}, so you may be signed out of the app."* |
 | **Information bar** | Shown only when the tab is pinned: *"You may need to pin the app again, since this replaces the shortcut."* |
 
 | Action | Result |
 |---|---|
-| **Move to {container}** | Applies; stored data resets to zero; toast offers **Undo**. |
-| **Cancel / Escape / outside click** | Reverts the dropdown. |
+| **Move to {container}** | Firefox applies the change. The quantity of data in storage becomes zero. A toast offers **Undo**. |
+| **Cancel, Escape, or a click outside** | Firefox puts the dropdown back to its previous value. |
 
 ![The Change container confirmation dialog](docs/screenshots/spec/5.3-container-dialog.png)
 
@@ -563,16 +563,16 @@ The URL shown is the normalised version that will be written to the shortcut.
 | Element | Content |
 |---|---|
 | **Title** | *"Remove {name}?"* or *"Remove {n} Taskbar Tabs?"* |
-| **Body** | Explains that Firefox deletes the shortcut it created, the site stays available as a normal tab, and the sign-in survives unless data is cleared. |
-| **Checkbox** | *"Also clear cookies and site data for this site"*, default off |
-| **Information bar** | Shown when any affected tab is pinned: *"If the icon is still on your taskbar afterwards, right-click it and choose Unpin from taskbar."* |
+| **Body** | Tells the person that Firefox deletes the shortcut that it made, that the site stays available as a usual tab, and that the sign-in stays until the person deletes the data. |
+| **Checkbox** | *"Also clear cookies and site data for this site"*, off by default |
+| **Information bar** | Shown when one or more of the tabs is pinned: *"If the icon is still on your taskbar afterwards, right-click it and choose Unpin from taskbar."* |
 
 | Action | Result |
 |---|---|
-| **Remove** | Removes the tab(s); toast offers **Undo**, which restores them in their original list positions. |
-| **Keep it / Escape** | Nothing changes. |
+| **Remove** | Firefox removes the tab or the tabs. A toast offers **Undo**, which puts them back at their original positions in the list. |
+| **Keep it or Escape** | Nothing changes. |
 
-Removing the tab you're currently viewing returns you to the list.
+If you remove the tab that you look at now, Firefox goes back to the list.
 
 ![The Remove Taskbar Tab confirmation dialog](docs/screenshots/spec/5.4-remove-dialog.png)
 
@@ -580,147 +580,147 @@ Removing the tab you're currently viewing returns you to the list.
 
 ### 5.5 Clear cookies and site data?
 
-Body names the amount, the host, and warns that tabs using the same container are affected and you'll be signed out.
+The body gives the quantity of data and the host. It also warns that the operation affects tabs in the same container, and that the site will sign you out.
 
 | Action | Result |
 |---|---|
-| **Clear data** | Stored data resets to zero; toast confirms. **Not undoable.** |
-| **Cancel / Escape** | Nothing changes. |
+| **Clear data** | The quantity of data in storage becomes zero. A toast confirms the operation. **You cannot undo this operation.** |
+| **Cancel or Escape** | Nothing changes. |
 
 ![The Clear cookies and site data confirmation dialog](docs/screenshots/spec/5.5-clear-data-dialog.png)
 
 ---
 
-## 6. Taskbar pinning: what is and isn't possible
+## 6. Taskbar pin operations: what is possible and what is not possible
 
-Windows controls the taskbar, not the browser. Firefox can request that an icon be added; it cannot remove one.
+Windows controls the taskbar, and the browser does not. Firefox can ask Windows to add an icon. It cannot remove an icon.
 
-| Capability | Available | Where |
+| Capability | Available | Location |
 |---|---|---|
-| Add an icon to the taskbar | Yes | Add dialog, row menu **Pin to taskbar** |
-| See whether a tab is pinned | Yes | Row badge |
-| Remove an icon from the taskbar | **No** | Right-click the icon on the taskbar → **Unpin from taskbar** |
-| Bulk unpin | **No** | n/a |
+| Add an icon to the taskbar | Yes | Add dialog, and **Pin to taskbar** in the row menu |
+| See if a tab is pinned | Yes | Row badge |
+| Remove an icon from the taskbar | **No** | Click the icon on the taskbar with the right button, then select **Unpin from taskbar** |
+| Bulk unpin | **No** | Not applicable |
 
-Because of this there is no pin toggle, no unpin menu item and no bulk unpin. The interface warns in two places where a pin may be affected: when saving a pinned tab's name or address, and when removing a pinned tab.
+Thus there is no pin toggle, no unpin menu item, and no bulk unpin control. The interface warns in the two locations where an operation can affect a pin: when you save the name or the address of a pinned tab, and when you remove a pinned tab.
 
-![The row menu for an unpinned tab](docs/screenshots/spec/6-pinning.png)
+![The row menu of a tab that is not pinned](docs/screenshots/spec/6-pinning.png)
 
-*The menu for an unpinned tab offers **Pin to taskbar**, and no unpin action exists anywhere in the interface.*
+*The menu of a tab that is not pinned offers **Pin to taskbar**. There is no unpin action in the interface.*
 
 ---
 
 ## 7. Feedback and undo
 
-Toasts appear at the bottom of the window, dismiss automatically after about eight seconds, and can be dismissed manually.
+Toasts show at the bottom of the window. They go away automatically after about eight seconds, and you can also dismiss them manually.
 
-| Action | Undoable |
+| Action | Undo available |
 |---|---|
-| Remove (single or bulk) | Yes, restores to original list positions |
-| Change container | Yes, restores container and stored-data figure |
-| Add a Taskbar Tab | No, but the toast offers **Open** |
-| Save name / address | No, because the confirmation dialog is the checkpoint |
-| Switch to the app a site provides | No, for the same reason |
-| Decline a rename by the site | No, but it only writes a name you can change again |
+| Remove (one tab or a bulk removal) | Yes. Firefox puts the tabs back at their original positions in the list. |
+| Change container | Yes. Firefox puts back the container and the quantity of data in storage. |
+| Add a Taskbar Tab | No, but the toast offers **Open**. |
+| Save the name or the address | No, because the confirmation dialog is the checkpoint. |
+| Change to the app that a site supplies | No, for the same reason. |
+| Refuse a rename by the site | No, but the action only writes a name that you can change again. |
 | Clear cookies and site data | No |
 | Restore defaults | No |
 | Pin to taskbar | No |
 
-![A toast offering Undo](docs/screenshots/spec/7-undo-toast.png)
+![A toast with an Undo control](docs/screenshots/spec/7-undo-toast.png)
 
 ---
 
 ## 8. Page states
 
-| State | Trigger | What's shown |
+| State | Trigger | Content |
 |---|---|---|
-| **Normal** | One or more Taskbar Tabs exist | Settings card and the full list |
-| **Empty** | No Taskbar Tabs at all | Settings card, plus an empty state explaining how to add one and an **Add Taskbar Tab…** button |
-| **No search results** | Search matches nothing | The message and a **Clear search** button; the list is otherwise intact |
-| **Selection active** | One or more rows selected | Bulk action bar replaces the "Select all" checkbox |
-| **App settings** | A tab is opened | Sub-page with an **All Taskbar Tabs** back button. There are no breadcrumbs, matching the rest of Settings |
+| **Normal** | One or more Taskbar Tabs exist | The Settings card and the full list |
+| **Empty** | No Taskbar Tabs exist | The Settings card, an empty state that tells you how to add a tab, and an **Add Taskbar Tab…** button |
+| **No search results** | The search text matches nothing | The message and a **Clear search** button. The remainder of the list is unchanged. |
+| **Selection active** | One or more rows are selected | The bulk action bar replaces the "Select all" checkbox |
+| **App settings** | You open a tab | A sub-page with an **All Taskbar Tabs** button that goes back. There are no breadcrumbs, as in the remainder of Settings. |
 
 ![The empty state](docs/screenshots/spec/8-empty-state.png)
 
-*Shown when no Taskbar Tabs exist.*
+*The page in this state when no Taskbar Tabs exist.*
 
 ---
 
-## 9. Where each value comes from
+## 9. The source of each value
 
-Three kinds of entry share the list. One was typed in by hand; one was declared by the site in a manifest, where the name, icon, start page and area belong to the developer; one was installed by policy and takes its identity from a manifest the same way, but is not the person's to remove.
+Three types of entry share the list. A person typed the first type manually. The site declared the second type in a manifest, where the name, the icon, the start page, and the area belong to the developer. A policy installed the third type. The third type also takes its identity from a manifest, but the person cannot remove it.
 
 | | Added by you | From the site | Installed by policy |
 |---|---|---|---|
-| **Name** | Yours | The site's, replaceable with a local one (§4.1) | Same as From the site |
-| **Address it opens** | Any valid `http(s)` URL | The declared start page, editable within the app's area (§4.2) | Same |
-| **Area it covers** | Inferred: the host of the address | Declared by the site | Same |
-| **Icon** | Favicon | From the site | Same |
-| **Can change on its own** | No | Yes: the name, when the site is updated (§4.12) | Yes |
+| **Name** | Yours | From the site. A local name can replace it (§4.1). | The same as From the site |
+| **Address that it opens** | Any valid `http(s)` URL | The declared start page. Editable in the area of the app (§4.2). | The same |
+| **Area that it covers** | Calculated: the host of the address | Declared by the site | The same |
+| **Icon** | Favicon | From the site | The same |
+| **Can change without a user action** | No | Yes: the name, when the site changes (§4.12) | Yes |
 | **Can be removed** | Yes | Yes | No (§4.10) |
 
-### An app's identity is the manifest plus the container
+### The identity of an app is the manifest and the container
 
-Chromium keys an installed app on its manifest `id` within a profile. Firefox's isolation unit sits inside the profile, so the same key would make two containers running one app indistinguishable to everything downstream of it.
+Chromium keys an installed app on its manifest `id` in a profile. The isolation unit in Firefox is inside the profile. Thus the same key would make two containers that run one app the same for each function downstream.
 
-The identity key is therefore the manifest `id` **and** the container. Consequences, all of them already specified:
+For this reason, the identity key is the manifest `id` **and** the container. This document already gives each consequence:
 
 | Question | Answer |
 |---|---|
-| Can one app exist twice? | Yes, once per container (§5.1) |
-| How are they told apart? | By name, which the second copy is required to make distinct, because the taskbar shows neither the container nor this list |
-| Which one captures a link? | Exactly one, chosen explicitly (§4.7) |
-| Which one starts at sign-in? | Either, both, or neither. Two windows at sign-in is a coherent thing to want (§4.6) |
+| Can one app exist two times? | Yes, one time in each container (§5.1) |
+| How can you tell the difference? | By name. The second copy must have a different name, because the taskbar shows neither the container nor this list. |
+| Which copy captures a link? | Exactly one copy, and you select it explicitly (§4.7) |
+| Which copy starts at sign-in? | One copy, both copies, or neither copy. Two windows at sign-in is a sensible thing to want (§4.6). |
 
-### Manifest identity requires a secure context
+### A manifest identity needs a secure context
 
-An app's name, icon, start page and area are only taken from a manifest served over HTTPS. A manifest fetched over plain HTTP is editable by anyone on the network, and an app's identity is precisely what should not be.
+Firefox takes the name, the icon, the start page, and the area of an app only from a manifest that comes over HTTPS. Each person on the network can edit a manifest that comes over plain HTTP. An identity is exactly the value that these persons must not edit.
 
-A **shortcut** to an `http://` address stays allowed, because addressing a device on your own network is a real thing to want and `http://homeassistant.local:8123` is a real example of it. Settings does not badge or warn about this. The warning belongs in the window, where the risk is (§10), not in a list of things you configured on purpose.
+A **shortcut** to an `http://` address stays permitted, because a device on your own network is a correct thing to address. `http://homeassistant.local:8123` is a true example. Settings gives no badge and no warning for this condition. The warning belongs in the window, where the risk is (§10), and not in a list of items that you configured intentionally.
 
-### The area is a set, not an origin
+### The area is a set, and not one origin
 
-An app's area is stored as a list of matchers, currently always of length one. Chromium ships `scope_extensions`, which lets an app claim further origins if each one opts in by hosting a file naming the app. Whether or not Firefox implements it, the area must not be written as a single-origin comparison, or a legitimate multi-origin app would have its own second origin rejected by §4.2.
+Firefox stores the area of an app as a list of matchers. Today the list always has one item. Chromium has `scope_extensions`, which lets an app claim more origins. Each of these origins must agree, and it agrees when it holds a file that gives the name of the app. Firefox can implement this function or not implement it. But the code must not compare one origin only. If it does, §4.2 refuses the second origin of a correct app that uses more than one origin.
 
-![A row showing the From the site badge alongside the others](docs/screenshots/spec/3.1-row-badges.png)
+![A row with the From the site badge and the other badges](docs/screenshots/spec/3.1-row-badges.png)
 
-They share one list rather than two sections. Someone looking for Teams should not have to know how Teams arrived in order to find it. The difference is a property of a row, shown as a badge (§3.1), not an organising principle for the page.
+The types share one list, and the list has no sections. A person who looks for Teams must not have to know how Teams came into the list. The difference is a property of a row, and a badge shows it (§3.1). The difference is not a method to group the page.
 
-**The badge is not a trust signal.** A manifest is asserted by whoever controls the origin, and Firefox verifies nothing beyond that, so **From the site** carries no checkmark, shield or "Verified".
+**The badge is not a trust signal.** The party that controls the origin asserts the manifest, and Firefox does no more verification. Thus **From the site** has no checkmark, no shield, and no "Verified" text.
 
 ### Why the name is editable and the address is not
 
-The name is a private label with no security role, and renaming an installed app is the thing most often missing from equivalent features elsewhere, since installing one site across several profiles leaves several identically named icons. Locking it would buy nothing.
+The name is a private label with no security function. Also, the rename function is the function that equivalent features most frequently do not have. If you install one site in more than one profile, you get more than one icon with the same name. To lock the name would give no advantage.
 
-The address is different. A window that presents itself as an app, wears the site's icon, sits on the taskbar and holds the site's cookies and permissions is making a claim about what it is. Letting it be repointed anywhere is how that claim becomes a lie. So the address is held to the area the app declares, which is the site's own statement about its extent, not a restriction Firefox invented.
+The address is different. A window presents itself as an app, has the icon of the site, is on the taskbar, and holds the cookies and permissions of the site. Thus it makes a statement about what it is. If you can point it to a different location, that statement becomes untrue. Thus the address must stay in the area that the app declares. That area is the statement of the site about its own extent, and it is not a constraint that Firefox invented.
 
 ### Not built
 
-- Two list sections, a Type column, or a provenance filter.
+- Two sections in the list, a Type column, or a filter for the source of an app.
 - A hidden advanced override for the address (§4.2).
-- Editable icons, for any kind.
-- A verified or trusted badge.
-- Separate "Uninstall" vocabulary (§4.10).
-- An insecure-origin badge in the list. The window carries it instead (§10).
-- **File and protocol handlers.** Chromium registers the `file_handlers` and `protocol_handlers` a manifest declares into the Windows registry, and unregisters them on uninstall. This design models neither, because a claim on `.pdf` or on a URL scheme is an OS-level assertion Firefox would have to actually make, and a control for something the operating system will ignore is the unpin toggle again (§6). If they ever land, §4.10 and §5.4 must enumerate what removal takes with it, because "deletes the shortcut Firefox created" would no longer be the whole truth.
-- **Anything a manifest declares beyond identity**: `share_target`, `shortcuts`, `launch_handler`, badging, widgets. None affects what this page shows.
+- Editable icons, for each type.
+- A verified badge or a trusted badge.
+- A separate "Uninstall" vocabulary (§4.10).
+- A badge in the list for an insecure origin. The window carries that information (§10).
+- **File handlers and protocol handlers.** Chromium writes the `file_handlers` and the `protocol_handlers` from a manifest into the Windows registry, and removes them at the uninstall operation. This design does not model them. A claim on `.pdf` or on a URL scheme is an assertion at the level of the operating system, and Firefox must truly make it. Also, a control for a function that the operating system ignores is the unpin toggle again (§6). If these members come later, §4.10 and §5.4 must give each item that the removal deletes. "Deletes the shortcut Firefox created" is then no longer the full truth.
+- **Each manifest member that is not part of the identity**: `share_target`, `shortcuts`, `launch_handler`, badging, and widgets. None of them changes the content of this page.
 
 ---
 
 ## 10. The app window
 
-The settings on this page produce a window with reduced chrome. That window is not part of Settings, but it is where the identity rules in §9 are either upheld or wasted, so its requirements belong here.
+The settings on this page make a window that has less chrome than a usual window. That window is not part of Settings. But it is the location where the identity rules in §9 operate or fail. Thus the rules for that window are in this document.
 
-**The problem.** Removing the address bar removes the browser's main anti-phishing affordance. Constraining the address in §4.2 stops a Taskbar Tab being repointed through Settings; it does nothing about the app navigating itself somewhere else once it opens, which is cheaper and does not involve Settings at all.
+**The problem.** If you remove the address bar, you remove the primary anti-phishing control of the browser. The address constraint in §4.2 prevents a change to the address of a Taskbar Tab through Settings. It does nothing about an app that goes to a different location after it opens. That attack is less expensive, and it does not use Settings.
 
-**The rule.** The origin is always present, in real window chrome that content cannot paint over, and its appearance changes when the app leaves the area it declares.
+**The rule.** The window always shows the origin, in true window chrome that the content cannot draw over. The appearance of the origin changes when the app goes out of the area that it declares.
 
-| State | Shows |
+| State | Content |
 |---|---|
-| **In the app's area** | A padlock and the origin, in the title bar beside the app name |
-| **Outside it** | A warning icon, the new origin, and *"Outside {app name}"*, replacing the calm state |
-| **Not secure** | A warning icon and *"Not secure"* before the origin. This is where an `http://` shortcut is called out (§9), and it is the only place |
+| **In the area of the app** | A padlock and the origin, in the title bar adjacent to the name of the app |
+| **Outside the area** | A warning icon, the new origin, and *"Outside {app name}"*, in the position of the calm state |
+| **Not secure** | A warning icon and *"Not secure"* before the origin. This is the only location that gives this information for an `http://` shortcut (§9). |
 
-Chromium shows nothing while in scope and raises a mini URL bar only on leaving it. That is one state better than nothing and one worse than this, because a page rendered in standalone mode can draw a convincing imitation of the browser's own indicator, and an indicator that is usually absent is the easiest kind to counterfeit: there is nothing to compare it against. An origin that is always there, always in the same place, and outside the content area is a much poorer target.
+Chromium shows nothing while the app stays in its area, and raises a small URL bar only when the app goes out of the area. That behaviour is one state better than nothing, and one state worse than this design. A page in standalone mode can draw a good copy of the indicator of the browser. An indicator that is usually absent is the easiest type to copy, because there is nothing to compare the copy with. An origin that is always present, always in the same location, and outside the content area is a much more difficult target.
 
-This does not make the window unspoofable. It makes the spoof compete with a real control in a fixed position rather than filling a vacuum.
+This does not make a false window impossible. It makes the false window compete with a true control in a fixed position, and not fill an empty space.

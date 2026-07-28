@@ -1,200 +1,200 @@
-# Security and feature gaps, measured against Chromium
+# Security and feature gaps, compared with Chromium
 
-A review of the design as it stands, against what Chromium ships for installed web apps. It covers what is missing, what is wrong, and what is deliberately different and should stay that way.
+This document reviews the design in its current state against the equivalent Chromium functions for installed web apps. It gives what is absent, what is incorrect, and what is intentionally different and must stay different.
 
-**Headline:** the identity work in [the provenance analysis](taskbar-tabs-provenance-analysis.md) is sound, but it guards the wrong end of the problem on its own. The address field in Settings is the surface an attacker needs least. The unguarded surface is the window at runtime, and the design says nothing about it at all.
+**Summary:** the identity work in [the source analysis](taskbar-tabs-provenance-analysis.md) is correct, but alone it protects the wrong end of the problem. An attacker has the least need of the address field in Settings. The unprotected surface is the window at run time, and the design says nothing about it.
 
-**Status:** all ten findings have been resolved. Two were defects and are fixed in [mockup.html](mockup.html); the rest are decisions now carried by the [specification](taskbar-tabs-options-specification.md). §11 records where each one landed. The sections below are kept as the reasoning that produced those decisions, and are written in the present tense of the review.
+**Status:** the design has answers for the ten findings. Two findings were defects, and [mockup.html](mockup.html) has the corrections. The [specification](taskbar-tabs-options-specification.md) holds each other decision. §11 records the result of each finding. The sections below stay as the reasoning that made those decisions. They use the present tense of the review.
 
 ---
 
-## 1. The window is undefined, and it is where the security lives
+## 1. The window is not defined, and it is the location of the security
 
-Every document here describes a list, a sub-page and some dialogs. None of them describes the thing those settings produce: a browser window with reduced chrome, holding a site's cookies and permissions, wearing that site's icon, launched from the taskbar.
+Each document here describes a list, a sub-page, and some dialogs. No document describes the object that these settings make: a browser window with less chrome, which holds the cookies and permissions of a site, has the icon of that site, and starts from the taskbar.
 
-That window has no address bar. Removing the address bar removes the primary anti-phishing affordance in the browser, and the design has no position on what replaces it.
+That window has no address bar. If you remove the address bar, you remove the primary anti-phishing control in the browser. The design has no position on the replacement.
 
-Chromium's position is explicit. When a standalone app window navigates off-origin it shows a mini URL bar carrying the new origin, keeping standalone display mode but making the boundary visible. The manifest spec asks for exactly this: a prominent UI element showing at least the origin, visually distinct from the in-scope state, so that leaving scope is obvious.
+The position of Chromium is explicit. When a standalone app window goes to a different origin, Chromium shows a small URL bar with the new origin. It keeps the standalone display mode, but it makes the boundary visible. The manifest specification asks for exactly this behaviour: a prominent UI element that shows the origin as a minimum, and that is visually different from the state in the area, so that the user sees the change clearly.
 
-**What needs deciding:**
+**What needs a decision:**
 
-| Question | Chromium's answer | Ours |
+| Question | The Chromium answer | Our answer |
 |---|---|---|
-| What identifies the origin while in scope? | Origin chip in the title bar, "App info" | Undefined |
-| What happens on off-scope navigation? | Mini URL bar appears with the new origin | Undefined |
-| Can the page counterfeit that indicator? | Partly, and it is a known open issue | Undefined |
-| Does an insecure origin look different? | Yes, standard insecure indicator | Undefined |
+| What identifies the origin while the app is in its area? | An origin chip in the title bar, and "App info" | Not defined |
+| What occurs at a navigation out of the area? | A small URL bar shows the new origin | Not defined |
+| Can the page make a copy of that indicator? | Partly, and this is a known open issue | Not defined |
+| Does an insecure origin look different? | Yes, with the standard insecure indicator | Not defined |
 
-The counterfeiting problem is worth naming rather than inheriting silently. [w3c/manifest#747](https://github.com/w3c/manifest/issues/747) records it: a page rendered in standalone mode can draw a convincing fake of the browser's own off-scope indicator, so the indicator is a hint and not a guarantee. Firefox's advantage here is that it can put the indicator in real window chrome that content cannot paint over, which is a genuine design opportunity rather than a gap to copy.
+The problem of the false indicator needs a statement, and this design must not take it silently from Chromium. [w3c/manifest#747](https://github.com/w3c/manifest/issues/747) records it: a page in standalone mode can draw a good copy of the off-scope indicator of the browser. Thus the indicator is a hint and not a guarantee. Firefox has an advantage here. It can put the indicator in true window chrome, and the content cannot draw over it. That is a true design opportunity, and not a gap to copy.
 
-This is the single largest omission. The scope constraint on the address field (§4.2) stops a user or a support scam from repointing an app in Settings. It does nothing about the app navigating itself somewhere else the moment it opens, which is the cheaper attack and the one that does not require touching Settings at all.
-
----
-
-## 2. Manifest apps need a secure context, and nothing enforces it
-
-Chromium will not install a web app from a non-secure origin. HTTPS, or `localhost`, or nothing. This is not incidental: a manifest served over plain HTTP is attacker-modifiable in transit, and an app's identity is exactly what you do not want a network attacker editing.
-
-The prototype accepts `http://` for both kinds of entry. Confirmed by test: `http://insecure.example/login` is accepted by the Add dialog without comment.
-
-The rule should be split the way Chromium splits it:
-
-- **From the site**: requires a secure context, because the identity claim is only worth something if the transport is authenticated.
-- **Added by you**: `http://` allowed, since a shortcut to a local device is a real use case and the seed data already leans on it with `http://homeassistant.local:8123`. But the window must then carry the insecure indicator, which returns to §1.
-
-Note the tension in the current seed data: Home Assistant is a plain-HTTP app that many people genuinely run, and it would be perverse to refuse it a shortcut. The distinction resolves it cleanly, which is a point in favour of having two kinds of entry at all.
+This is the largest omission. The area constraint on the address field (§4.2) prevents a user or a support fraud from a change to the address of an app in Settings. It does nothing about an app that goes to a different location immediately after it opens. That attack is less expensive, and it does not use Settings.
 
 ---
 
-## 3. Link capture is by host, where Chromium's is by scope
+## 2. Manifest apps need a secure context, and no rule enforces it
 
-§4.7 matches by host, and the spec says so plainly: "Matching is by host, so it covers the whole site, not just the configured address."
+Chromium does not install a web app from an origin that is not secure. It uses HTTPS or `localhost`, or it installs nothing. This rule is not incidental. An attacker can change a manifest that comes over plain HTTP while it is in transit. The identity of an app is exactly the value that a network attacker must not edit.
 
-Chromium captures navigations that fall within the manifest's declared scope.
+The prototype accepts `http://` for both types of entry. A test confirms this: the Add dialog accepts `http://insecure.example/login` with no message.
 
-Host matching is over-broad in a way that matters on shared hosts. An app installed from `someuser.github.io` would capture every link to `github.io`. An app on `tenant.atlassian.net` captures the host, which is fine, but `sharepoint.com` or any multi-tenant host is not. The failure mode is a link to someone else's content opening inside an app window that is branded as, and holds the cookies of, a different tenant.
+The rule must be divided in the same manner as in Chromium:
 
-For manifest apps the fix is free, because the scope is already declared and already parsed for the address field. For manual shortcuts there is no declared scope, so host matching is the only option available, and the honest framing is that manual shortcuts capture more coarsely than apps do.
+- **From the site**: needs a secure context, because the identity claim has value only when the transport is authenticated.
+- **Added by you**: `http://` is permitted, because a shortcut to a local device is a true use case. The seed data already uses `http://homeassistant.local:8123`. But the window must then show the insecure indicator, and this returns to §1.
 
-This is already recorded in the rationale as an open question about separating start page from capture scope. It should be re-recorded as a security question, not an ergonomics one.
+Note the conflict in the current seed data. Home Assistant is a plain-HTTP app that many persons truly operate, and it would be incorrect to refuse a shortcut to it. This difference solves the conflict cleanly, and that result supports the decision to have two types of entry.
+
+---
+
+## 3. Link capture uses the host, but Chromium uses the declared area
+
+§4.7 compares by host, and the specification says so clearly: "Matching is by host, so it covers the whole site, not just the configured address."
+
+Chromium captures each navigation that is in the area that the manifest declares.
+
+A comparison by host is too wide on a shared host. An app that a person installs from `someuser.github.io` captures each link to `github.io`. An app on `tenant.atlassian.net` captures the host, and that result is correct. But `sharepoint.com`, or each other host with more than one tenant, is not correct. The failure is as follows: a link to the content of a different person opens in an app window that has the name of one tenant and holds the cookies of that tenant.
+
+For manifest apps, the correction has no cost, because the area is already declared and the address field already parses it. For manual shortcuts, no area is declared. Thus a comparison by host is the only available option, and the honest statement is that manual shortcuts capture more coarsely than apps.
+
+The rationale already records this as an open question about the difference between a start page and a capture area. This document must record it again as a security question, and not as a usability question.
 
 ---
 
 ## 4. `scope_extensions` would break the address field
 
-Chromium ships `scope_extensions`, which lets an app claim additional origins, each of which must opt in by hosting `/.well-known/web-app-origin-association` naming the app. Neither side can claim the relationship unilaterally. It exists because real apps span origins, and without it those navigations trip the off-scope bar and lose link capture.
+Chromium has `scope_extensions`, which lets an app claim more origins. Each of these origins must agree, and it agrees when it holds `/.well-known/web-app-origin-association` with the name of the app. Neither party can declare the relation alone. The member exists because true apps use more than one origin. Without it, these navigations start the off-scope bar and lose the link capture.
 
-Our `inScope` check is a single-origin comparison. An app that legitimately spans `example.com` and `example.co.uk` would have its own second origin rejected by the address field, with an error telling the user to add a separate Taskbar Tab.
+Our `inScope` check compares one origin. An app that correctly uses `example.com` and `example.co.uk` gets a refusal from the address field for its own second origin. The error message then tells the user to add a separate Taskbar Tab.
 
-The design does not have to implement scope extensions. It does have to not hard-code the assumption that scope is one origin, because the check is the thing that would need rewriting rather than extending. Treat the app's area as a set of matchers, currently of size one.
+This design does not have to implement the scope extensions. But it must not put the assumption of one origin into the code. The check is the part that a person must write again, and not extend. Thus the design must treat the area of the app as a set of matchers with a length of one today.
 
 ---
 
-## 5. Containers and manifest identity collide, and this is unresolved
+## 5. Containers and manifest identity collide, and this problem has no answer
 
-This is the part with no precedent to copy, because Chromium's isolation unit is a profile and Firefox's is a container inside a profile.
+There is no precedent to copy for this part. The isolation unit of Chromium is a profile, and the isolation unit of Firefox is a container in a profile.
 
-Chromium keys an installed app on its manifest `id` within a profile, so one app is one entry with one set of OS registrations. Two containers running the same app inside one Firefox profile means two entries sharing one manifest `id`, and several things then have no defined answer:
+Chromium keys an installed app on its manifest `id` in a profile. Thus one app is one entry with one set of registrations in the operating system. If two containers run the same app in one Firefox profile, two entries share one manifest `id`. Then several questions have no answer:
 
 | Collision | Consequence |
 |---|---|
-| Link capture | A captured link matches two windows. Which container gets it? |
-| Run at sign-in | Both start, or one does. Undefined |
-| File and protocol handlers | OS registration is one ProgID per app. Two containers cannot both own `.pdf` |
-| Shortcut identity | Two shortcuts, same manifest name and icon, different cookie jars, nothing on the taskbar to tell them apart |
+| Link capture | A captured link matches two windows. Which container gets the link? |
+| Run at sign-in | Both apps start, or one app starts. Not defined. |
+| File handlers and protocol handlers | The operating system registration is one ProgID for each app. Two containers cannot both own `.pdf`. |
+| Shortcut identity | Two shortcuts have the same manifest name and the same icon but different cookie jars. Nothing on the taskbar shows the difference. |
 
-The last one is a usability problem that becomes a security problem: two identical taskbar icons where one is your work account and one is not, and no way to tell which you clicked.
+The last collision is a usability problem that becomes a security problem. Two identical icons are on the taskbar, one icon is your work account, and you cannot see which icon you clicked.
 
-At minimum the design should state that the identity key is (manifest `id`, container) rather than manifest `id`, and that a container-differentiated app needs something visible to distinguish it. The container badge exists in the list already. It does not exist on the taskbar, in Alt+Tab, or in the Start menu, which is where the confusion actually happens. The local rename affordance is the available answer, and the design could reasonably prompt for a name when adding a second copy of the same app in a different container.
-
----
-
-## 6. The Add dialog introduces a fetch that Chromium never performs
-
-Chromium installs from a page you already have open. The manifest is already fetched, the origin is already in your history, and the decision to install comes after the decision to visit.
-
-Our Add dialog inverts that. Someone types or pastes an address, and the interface has to fetch that origin's manifest to know whether to offer the app option. That is a settings page making a network request to an arbitrary, possibly attacker-supplied address, before the user has committed to anything.
-
-Consequences worth weighing:
-
-- The request happens on a page where users do not expect network activity, and paste is the normal way to get an address into that field.
-- It confirms to the receiving server that this profile is about to add the site, and it leaks that at typing speed if the lookup is on `input` rather than on submit.
-- It runs in whatever container the dialog is about to use, or none, which needs deciding.
-
-Mitigations, roughly in order of preference: fetch only on submit rather than while typing; only offer the app option for origins already in history; or drop the app path from the dialog entirely and let installation happen from the address bar button, where the page is already loaded, leaving the dialog to make shortcuts only. The last is the most defensible and costs the least.
-
-The prototype fakes this with a static lookup table, so the question is invisible in the mockup and would surface immediately in implementation.
+As a minimum, the design must state that the identity key is (manifest `id`, container) and not the manifest `id` alone. It must also state that an app with more than one container needs a visible difference. The container badge is already in the list. But it is not on the taskbar, in Alt+Tab, or in the Start menu, and that is where the confusion occurs. The local rename control is the available answer. The design can also ask for a name when a person adds a second copy of the same app in a different container.
 
 ---
 
-## 7. Two defects in the prototype, found by testing
+## 6. The Add dialog makes a request that Chromium never makes
 
-Both confirmed by driving the real DOM.
+Chromium installs an app from a page that you already have open. The browser already has the manifest, the origin is already in your history, and you decide to install the app after you decide to visit the site.
 
-### 7.1 Duplicate detection blocks the same app in two containers
+Our Add dialog does the opposite. A person types or pastes an address, and the interface must then get the manifest of that origin to know if it can offer the app option. Thus a settings page makes a network request to an arbitrary address, and possibly to an address from an attacker, before the user agrees to anything.
+
+These consequences are important:
+
+- The request occurs on a page where users do not expect network activity, and a paste operation is the usual method to put an address into that field.
+- The request tells the server that this profile will possibly add the site. If the request occurs at each `input` event and not at the submission, it gives that information at the speed of the typing.
+- The request runs in the container that the dialog will use, or in no container, and this needs a decision.
+
+These are the possible corrections, in the order of preference. First, make the request only at the submission and not during the typing. Second, offer the app option only for origins that are already in the history. Third, remove the app path from the dialog, and let the installation occur from the button in the address bar, where the browser already has the page. The dialog then makes only shortcuts. The third correction is the most defensible, and it has the lowest cost.
+
+The prototype simulates this function with a static table. Thus the question is invisible in the mockup, and it would occur immediately in an implementation.
+
+---
+
+## 7. Two defects in the prototype, found by test
+
+A test on the true DOM confirms both defects.
+
+### 7.1 The duplicate check refuses the same app in two containers
 
 ```
 const duplicate = state.apps.find(a => a.origin === url.origin && a.path === path);
 ```
 
-The check ignores the container. Adding Outlook in Work and Outlook in Personal is refused with "Microsoft Outlook already opens this address."
+The check ignores the container. Thus Firefox refuses Outlook in Work and Outlook in Personal with the message "Microsoft Outlook already opens this address."
 
-This breaks the one capability this design has that Chromium does not, in exactly the scenario that motivates containers. The key should be origin, path and container. It also intersects §5: once permitted, two identically named apps exist, which is when the naming question has to be answered.
+This defect breaks the one capability that this design has and Chromium does not have, in the exact scenario that containers exist for. The key must be the origin, the path, and the container. The defect also relates to §5: after the correction, two apps with the same name exist, and the design must then answer the question about the name.
 
-### 7.2 An unpinned app can be re-addressed with no confirmation
+### 7.2 A tab that is not pinned can get a new address with no confirmation
 
-`switch-to-app` routes through the save confirmation only when the app is pinned, on the reasoning that rebuilding the shortcut may cost the pin. But the same action also changes the address the app opens, and for an unpinned app that happens on one click with only a toast to show for it. Confirmed: a shortcut at `/gallery` became `/` silently.
+The `switch-to-app` action goes through the save confirmation only when the app is pinned. The reason was that a new build of the shortcut can cause the loss of the pin. But the same action also changes the address that the app opens. For a tab that is not pinned, that change occurs with one click and only a toast. A test confirms this: a shortcut at `/gallery` became `/` with no message.
 
-The confirmation is currently gated on the wrong thing. Losing a pin is the lesser consequence; changing what the app opens is the greater one, and it should confirm on its own account.
+The confirmation uses the incorrect condition. The loss of a pin is the smaller consequence. A change to the address that the app opens is the larger consequence, and it must cause a confirmation on its own.
 
 ---
 
-## 8. Manifest members the design does not model
+## 8. Manifest members that the design does not model
 
-Not all of these need building. They need a stated position, because several create OS-level state that removal has to clean up.
+The design does not have to build each of these members. But it must have a position on each of them, because several members make state in the operating system that a removal must clean.
 
-| Member | Chromium | Security relevance | Position needed |
+| Member | Chromium | Security relevance | Position that is necessary |
 |---|---|---|---|
-| `id` | App identity across `start_url` changes | High. Distinguishes a rename from a substitution | §4.12 relies on it but §9 does not define what a changed `id` means |
-| `display` / `display_override` | standalone, minimal-ui, tabbed, window-controls-overlay | High. Determines how much chrome, so how much origin signal | Undefined, see §1 |
-| `file_handlers` | Registers ProgIDs in the Windows registry | High. OS-level claim on file types | Removal must unregister. §4.10's "deletes the shortcut" becomes untrue |
-| `protocol_handlers` | Registers URL schemes | High. A site claiming `mailto:` or a custom scheme | Same |
+| `id` | The identity of the app after a change to `start_url` | High. It shows the difference between a new name and a substitution. | §4.12 uses it, but §9 does not define the meaning of a changed `id` |
+| `display` / `display_override` | standalone, minimal-ui, tabbed, window-controls-overlay | High. It sets the quantity of chrome, thus the quantity of origin signal. | Not defined, see §1 |
+| `file_handlers` | Writes ProgIDs into the Windows registry | High. A claim on file types at the level of the operating system. | The removal must remove the registration. "Deletes the shortcut" in §4.10 becomes untrue. |
+| `protocol_handlers` | Registers URL schemes | High. A site claims `mailto:` or a custom scheme. | The same |
 | `share_target` | Receives shared content | Medium | Not modelled |
-| `shortcuts` | Jump list entries | Low | Not modelled |
-| `launch_handler` | focus-existing, navigate-existing, auto | Medium. Interacts with link capture and containers | Not modelled |
+| `shortcuts` | Jump list items | Low | Not modelled |
+| `launch_handler` | focus-existing, navigate-existing, auto | Medium. It interacts with the link capture and with containers. | Not modelled |
 | Badging API | Unread counts on the taskbar icon | Low | Not modelled |
-| `scope_extensions` | Multi-origin apps | High, see §4 | Blocks a legitimate case today |
+| `scope_extensions` | Apps with more than one origin | High, see §4 | It stops a correct use case today |
 
-The handler members are the important ones. Chromium's documentation is explicit that uninstall unregisters file extension handlers. If Firefox ever registers handlers, the removal dialog has to enumerate them, and the current copy promising that only a shortcut goes away would be a false statement about what removal did.
-
----
-
-## 9. Enterprise is a third provenance
-
-Chromium has `WebAppInstallForceList`, which installs apps silently and prevents the user uninstalling them, and `WebAppSettings` for per-app policy including `run_on_os_login`.
-
-Our badge pair is **From the site** and **Added by you**. A force-installed app is neither. It also breaks assumptions elsewhere: **Remove Taskbar Tab** must be unavailable rather than merely discouraged, and the reason has to be stated or the disabled control is exactly the dead end §4.2 argues against.
-
-This is recorded as an open question already. It is a bigger hole than that framing suggests, because it changes the badge vocabulary from a pair to a set and adds the first case where an action is genuinely unavailable.
+The handler members are the important members. The Chromium documentation says clearly that an uninstall operation removes the registration of the file extension handlers. If Firefox registers handlers, the removal dialog must give each handler. The current text promises that only a shortcut goes away, and that promise would then be an untrue statement about the removal.
 
 ---
 
-## 10. Where the design is ahead, and should stay ahead
+## 9. An enterprise device is a third source
 
-Worth stating, because several of these are the reason the gaps above are worth closing rather than abandoning.
+Chromium has `WebAppInstallForceList`, which installs apps silently and prevents an uninstall operation by the user. It also has `WebAppSettings` for the policy of each app, and this includes `run_on_os_login`.
 
-| Capability | Chromium | Here |
+Our pair of badges is **From the site** and **Added by you**. A forced app is neither of these. It also breaks assumptions in other locations. **Remove Taskbar Tab** must be unavailable, and not only discouraged. The interface must also give the reason. If it does not, the disabled control is exactly the dead end that §4.2 refuses.
+
+This document already records this item as an open question. It is a larger gap than that description shows, because it changes the badge vocabulary from a pair to a set. It also adds the first case where an action is truly unavailable.
+
+---
+
+## 10. Where the design is in front, and must stay in front
+
+These items need a statement, because several of them are the reason to close the gaps above and not to stop the work.
+
+| Capability | Chromium | This design |
 |---|---|---|
-| Rename an installed app locally | No. Long-standing Edge request | Yes, with the site's name always visible and a reset |
-| Edit the address within scope | No | Yes, validated |
-| Decline a developer's rename | Accept or leave pending | Adopt, with **Keep calling it {old}** writing a local name |
-| Containers | No equivalent inside a profile | Yes |
+| Change the name of an installed app locally | No. This is a long Edge request. | Yes, with the name from the site always visible and a reset control |
+| Edit the address in the area of the app | No | Yes, with validation |
+| Refuse a new name from a developer | Accept it, or leave it pending | Take it, and **Keep calling it {old}** writes a local name |
+| Containers | No equivalent in a profile | Yes |
 | Search, sort, multi-select, bulk remove | No | Yes |
-| Honest per-app permissions | Shows them per-app, implying app scope | Shown read-only, stated as site-scoped, linked out |
-| One list regardless of provenance | Split across `chrome://apps` and shortcuts | One list, badged |
+| Honest permissions for each app | Shows them for each app, which implies the extent of the app | Read-only, stated as site-wide, with a link |
+| One list for each source | Divided between `chrome://apps` and shortcuts | One list, with badges |
 
-The permissions decision deserves particular defence. Chromium surfaces permissions on a per-app settings page, which reads as though the permission belongs to the app. It does not; it belongs to the origin, and it applies in ordinary tabs too. Being read-only and saying so is the more truthful design and should not be traded away for parity.
+The decision about the permissions needs a specific defence. Chromium shows the permissions on a settings page for each app. Thus the permission appears to belong to the app. It does not. It belongs to the origin, and it applies in usual tabs also. A read-only display with a statement is the more truthful design. This design must not trade it for parity.
 
 ---
 
-## 11. What to address, in order
+## 11. What to correct, in order
 
-Every item below has since been decided. The resolution is recorded here; the behaviour lives in the specification.
+Each item below now has a decision. This document records the result, and the specification holds the behaviour.
 
-| # | Item | Resolution | Where |
+| # | Item | Result | Location |
 |---|---|---|---|
-| 1 | Define the window | Origin always present in real chrome, distinct state off-scope, insecure state in the same slot. Goes past Chromium, which shows nothing in scope, because an indicator that is usually absent is the easiest to counterfeit | Spec §10 |
-| 2 | Secure context | Manifest identity is only taken over HTTPS. `http://` shortcuts stay allowed; the window carries the warning and the list says nothing | Spec §9, §10 |
-| 3 | Duplicate detection | Keyed on address **and** container. A second copy is allowed and required to have a distinct name, prefilled and following the container | Spec §5.1. **Fixed** |
-| 4 | Re-address confirmation | Always confirms. Losing a pin was the lesser consequence and the wrong thing to gate on | Spec §4.11. **Fixed** |
-| 5 | Link capture | Scope-based for manifest apps, host-based only where nothing was declared, and the coarseness is stated in the copy | Spec §4.7 |
-| 6 | Identity key | Manifest `id` plus container. One capture holder chosen explicitly; sign-in startup stays per-copy | Spec §9 |
-| 7 | Area as a set | Stored as a list of matchers, length one today, so `scope_extensions` extends rather than rewrites | Spec §9 |
-| 8 | Add-flow fetch | Removed. The dialog makes shortcuts; installing happens from the address bar, where the page is already loaded | Spec §5.1, §1.1 |
-| 9 | Handler members | Explicitly not built, with the removal-copy liability recorded against the day they land | Spec §9, §4.10 |
-| 10 | Enterprise | Third provenance, **Installed by {authority}**. Removal is absent rather than disabled, and the row names who decides | Spec §3.1, §4.10 |
+| 1 | Define the window | The origin is always present in true chrome. There is a different state outside the area, and an insecure state in the same position. This goes past Chromium, which shows nothing in the area, because an indicator that is usually absent is the easiest type to copy. | Spec §10 |
+| 2 | Secure context | Firefox takes a manifest identity only over HTTPS. `http://` shortcuts stay permitted. The window carries the warning, and the list says nothing. | Spec §9, §10 |
+| 3 | Duplicate check | The key is the address **and** the container. A second copy is permitted and must have a different name. The dialog gives a suggestion that follows the container. | Spec §5.1. **Corrected** |
+| 4 | Confirmation for a new address | The interface always confirms. The loss of a pin was the smaller consequence and the incorrect condition. | Spec §4.11. **Corrected** |
+| 5 | Link capture | It uses the declared area for manifest apps, and the host only when nothing is declared. The text gives the coarseness of the host rule. | Spec §4.7 |
+| 6 | Identity key | The manifest `id` and the container. One copy holds the capture, and you select it explicitly. The start at sign-in stays a property of each copy. | Spec §9 |
+| 7 | The area as a set | Firefox stores a list of matchers with a length of one today. Thus `scope_extensions` extends the check and does not replace it. | Spec §9 |
+| 8 | The request in the add flow | Removed. The dialog makes shortcuts. The installation occurs from the address bar, where the browser already has the page. | Spec §5.1, §1.1 |
+| 9 | Handler members | Not built, and this document records the liability in the removal text against the day that they come. | Spec §9, §4.10 |
+| 10 | Enterprise devices | A third source, **Installed by {authority}**. The removal control is absent and not disabled, and the row gives the name of the authority. | Spec §3.1, §4.10 |
 
-The one place this design deliberately diverges from Chromium rather than catching up is item 1. Everything else is either parity or a consequence of containers, which Chromium has no equivalent of.
+Item 1 is the one location where this design intentionally goes away from Chromium and does not follow it. Each other item is parity, or a consequence of containers, which Chromium has no equivalent of.
 
 ---
 
